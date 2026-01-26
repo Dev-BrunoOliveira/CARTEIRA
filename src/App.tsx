@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
-import { BrainCircuit, Wallet, Plus, Trash2 } from "lucide-react";
+import { createClient } from "@supabase/supabase-js";
+import { BrainCircuit, Wallet, Plus, Trash2, LogOut } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -11,34 +12,64 @@ import {
   Cell,
 } from "recharts";
 
+// Inicialização do Supabase
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY,
+);
+
 export default function App() {
+  const [session, setSession] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [name, setName] = useState("");
   const [value, setValue] = useState("");
   const [type, setType] = useState("income");
 
-  // Carrega os dados salvos ao iniciar o App
+  // Lógica de Autenticação
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogin = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
+    });
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setTransactions([]);
+  };
+
+  // Persistência Local
   useEffect(() => {
     const saved = localStorage.getItem("@FocusFinance:data");
     if (saved) setTransactions(JSON.parse(saved));
   }, []);
 
-  // Salva no LocalStorage sempre que a lista de transações mudar
   useEffect(() => {
     localStorage.setItem("@FocusFinance:data", JSON.stringify(transactions));
   }, [transactions]);
 
   const addTransaction = () => {
-    // .trim() evita nomes vazios ou só com espaços
     if (!name.trim() || !value) return;
-
     const item = {
       id: Date.now(),
       name: name.trim(),
       value: parseFloat(value),
       type,
     };
-
     setTransactions([item, ...transactions]);
     setName("");
     setValue("");
@@ -59,25 +90,68 @@ export default function App() {
   const balance = income - expense;
 
   const getAISuggestion = () => {
-    if (transactions.length === 0)
-      return "Adicione sua primeira movimentação para começar!";
-
-    if (balance <= 0)
-      return "Foco total em quitar dívidas e reduzir custos fixos.";
-
-    const emergencyReserveGoal = expense * 6;
-
-    if (balance < emergencyReserveGoal) {
-      return `Sua prioridade é a Reserva de Emergência. Recomendo aplicar os R$ ${balance.toFixed(2)} no Tesouro SELIC.`;
-    }
-
+    if (transactions.length === 0) return "Adicione sua primeira movimentação!";
+    if (balance <= 0) return "Foco total em quitar dívidas.";
+    const reserveGoal = expense * 6;
+    if (balance < reserveGoal)
+      return `Foque na Reserva de Emergência. Aplique R$ ${balance.toFixed(2)} no SELIC.`;
     return "Reserva OK! Hora de diversificar em FIIs ou Ações.";
   };
 
-  const chartData = [
-    { label: "Ganhos", total: income },
-    { label: "Gastos", total: expense },
-  ];
+  if (!session) {
+    return (
+      <div className="welcome-wrapper">
+        <div className="welcome-image">
+          <div className="welcome-overlay">
+            <h1>Descubra e controle sua vida financeira</h1>
+            <p>
+              Gerencie seus ganhos e gastos em um só lugar com inteligência!
+            </p>
+          </div>
+        </div>
+
+        <div className="welcome-auth-section">
+          <div className="auth-card">
+            <div className="auth-header">
+              <Wallet size={40} color="#4f46e5" />
+              <h2 className="brand-name">FocusFinance</h2>
+              <h3 className="welcome-text">Bem-vindo(a) de volta!</h3>
+            </div>
+
+            <div className="auth-form-simulated">
+              <div className="input-group">
+                <label>Email</label>
+                <input type="email" placeholder="Seu email" disabled />
+              </div>
+              <div className="input-group">
+                <label>Senha</label>
+                <input type="password" placeholder="Sua senha" disabled />
+              </div>
+              <button className="btn-login-main">Entrar</button>
+
+              <div className="auth-divider">
+                <span>OU</span>
+              </div>
+            </div>
+
+            <button onClick={handleLogin} className="btn-google-auth">
+              <img
+                src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                alt="Google"
+                className="google-icon-img"
+              />
+              <span>Continuar com o Google</span>
+            </button>
+
+            <p className="auth-footer-text">
+              Ainda não tem conta?{" "}
+              <span className="link-text">Crie uma conta</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container">
@@ -87,6 +161,19 @@ export default function App() {
             <Wallet size={28} /> FocusFinance
           </h1>
         </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+          <div className="user-profile" style={{ textAlign: "right" }}>
+            <span style={{ fontSize: "12px", opacity: 0.8, display: "block" }}>
+              Olá,
+            </span>
+            <strong>{session.user.user_metadata.full_name}</strong>
+          </div>
+          <button onClick={handleLogout} className="btn-logout">
+            <LogOut size={20} />
+          </button>
+        </div>
+
         <div className="balance-box">
           <span>SALDO DISPONÍVEL</span>
           <h2 style={{ color: balance >= 0 ? "#2ecc71" : "#e74c3c" }}>
@@ -101,7 +188,7 @@ export default function App() {
             <h3>Nova Movimentação</h3>
             <div className="form-group">
               <input
-                placeholder="Nome da transação"
+                placeholder="Descrição"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
@@ -124,24 +211,11 @@ export default function App() {
           <section className="card">
             <h3>Histórico</h3>
             <ul className="history-list">
-              {transactions.length === 0 && (
-                <p
-                  style={{
-                    color: "#999",
-                    textAlign: "center",
-                    padding: "20px",
-                  }}
-                >
-                  Nenhuma transação encontrada.
-                </p>
-              )}
               {transactions.map((t) => (
                 <li key={t.id} className="history-item">
                   <div style={{ display: "flex", flexDirection: "column" }}>
-                    <span style={{ fontWeight: "bold" }}>{t.name}</span>
-                    <small style={{ color: "#999" }}>
-                      {new Date(t.id).toLocaleDateString()}
-                    </small>
+                    <strong>{t.name}</strong>
+                    <small>{new Date(t.id).toLocaleDateString()}</small>
                   </div>
                   <div
                     style={{
@@ -155,13 +229,12 @@ export default function App() {
                         t.type === "income" ? "income-text" : "expense-text"
                       }
                     >
-                      {t.type === "income" ? "+" : "-"} R$ {t.value.toFixed(2)}
+                      R$ {t.value.toFixed(2)}
                     </span>
                     <Trash2
                       size={18}
                       color="#bbb"
                       style={{ cursor: "pointer" }}
-                      className="btn-delete"
                       onClick={() => deleteTransaction(t.id)}
                     />
                   </div>
@@ -173,23 +246,21 @@ export default function App() {
 
         <div className="right-column">
           <div className="ai-box">
-            <div
-              className="ai-title"
-              style={{ display: "flex", alignItems: "center", gap: "8px" }}
-            >
+            <div className="ai-title">
               <BrainCircuit size={20} /> Sugestão da IA
             </div>
-            <p style={{ fontSize: "0.9rem", color: "#444", lineHeight: "1.4" }}>
-              {getAISuggestion()}
-            </p>
+            <p>{getAISuggestion()}</p>
           </div>
 
           <div className="card" style={{ height: "320px" }}>
-            <h3 style={{ textAlign: "center", marginBottom: "20px" }}>
-              Gráfico Mensal
-            </h3>
+            <h3 className="chart-title">Balanço Visual</h3>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
+              <BarChart
+                data={[
+                  { label: "Ganhos", total: income },
+                  { label: "Gastos", total: expense },
+                ]}
+              >
                 <XAxis dataKey="label" />
                 <Tooltip />
                 <Bar dataKey="total">

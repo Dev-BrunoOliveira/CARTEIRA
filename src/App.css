@@ -1,13 +1,180 @@
-/* src/App.css */
+/* RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* TELA DE LOGIN SPLIT */
+.welcome-wrapper {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+
+.welcome-image {
+  flex: 1.2;
+  background: url("https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=2000&auto=format&fit=crop")
+    no-repeat center center;
+  background-size: cover;
+  position: relative;
+}
+
+.welcome-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 60px;
+  color: white;
+}
+
+.welcome-overlay h1 {
+  font-size: 2.8rem;
+  font-weight: 800;
+  margin-bottom: 20px;
+  line-height: 1.1;
+}
+.welcome-overlay p {
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
+/* LADO DIREITO (AUTH) */
+.welcome-auth-section {
+  flex: 1;
+  background: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 380px; /* Um pouco mais estreito para elegância */
+  text-align: center;
+}
+
+.brand-name {
+  color: #4f46e5;
+  font-size: 1.4rem;
+  margin: 10px 0;
+  font-weight: 700;
+}
+.welcome-text {
+  font-size: 1.8rem;
+  color: #1e293b;
+  margin-bottom: 30px;
+  font-weight: 700;
+}
+
+.auth-form-simulated {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.input-group {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.input-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #64748b;
+}
+.input-group input {
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  font-size: 0.95rem;
+}
+
+.btn-login-main {
+  padding: 14px;
+  background: #4a3728; /* Cor marrom do seu projeto Manda Receita */
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: not-allowed;
+  margin-top: 10px;
+}
+
+/* DIVISOR */
+.auth-divider {
+  margin: 25px 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+
+.auth-divider span {
+  padding: 0 15px;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* BOTÃO GOOGLE CORRIGIDO */
+.btn-google-auth {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 50px; /* Arredondado estilo moderno */
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #1e293b;
+  transition: background 0.2s ease;
+  font-size: 0.95rem;
+}
+
+.btn-google-auth:hover {
+  background: #f8fafc;
+}
+
+.google-icon-img {
+  width: 20px; /* Tamanho fixo e pequeno do ícone */
+  height: 20px;
+}
+
+.auth-footer-text {
+  margin-top: 30px;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+.link-text {
+  color: #4f46e5;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* DASHBOARD CSS - MANTENDO O QUE VOCÊ JÁ TEM */
 .container {
   max-width: 1000px;
   margin: 0 auto;
   padding: 20px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f4f7f6;
-  min-height: 100vh;
 }
-
 .header {
   background-color: #2c3e50;
   color: white;
@@ -17,137 +184,28 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 30px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
-
 .balance-box h2 {
-  margin: 5px 0 0 0;
   font-size: 2rem;
   color: #2ecc71;
 }
-
 .grid-layout {
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 25px;
 }
-
 .card {
   background: white;
   padding: 20px;
   border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   margin-bottom: 20px;
 }
-
-.form-group {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-}
-
-input, select {
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 1rem;
-}
-
-.btn-add {
-  grid-column: span 2;
-  background-color: #3498db;
-  color: white;
-  border: none;
-  padding: 12px;
-  border-radius: 8px;
+.income-text {
+  color: #27ae60;
   font-weight: bold;
-  cursor: pointer;
-  transition: background 0.3s;
 }
-
-.btn-add:hover {
-  background-color: #2980b9;
-}
-
-.history-list {
-  list-style: none;
-  padding: 0;
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.history-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 15px;
-  border-bottom: 1px solid #eee;
-  align-items: center;
-}
-
-.income-text { color: #27ae60; font-weight: bold; }
-.expense-text { color: #e74c3c; font-weight: bold; }
-
-.ai-box {
-  background-color: #ebf5ff;
-  border-left: 5px solid #3498db;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-}
-
-.ai-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #2980b9;
+.expense-text {
+  color: #e74c3c;
   font-weight: bold;
-  margin-bottom: 10px;
-}
-
-@media (max-width: 768px) {
-  .header {
-    flex-direction: column; /* Logo em cima, saldo embaixo */
-    text-align: center;
-    gap: 15px;
-    padding: 20px;
-  }
-
-  .grid-layout {
-    grid-template-columns: 1fr; /* Vira uma coluna única */
-    gap: 15px;
-  }
-
-  .form-group {
-    grid-template-columns: 1fr; /* Inputs um embaixo do outro */
-  }
-
-  .btn-add {
-    grid-column: span 1;
-  }
-
-  .balance-box h2 {
-    font-size: 1.5rem;
-  }
-}
-
-/* Ajuste fino para celulares muito pequenos */
-@media (max-width: 480px) {
-  .container {
-    padding: 10px;
-  }
-  
-  .card {
-    padding: 15px;
-  }
-
-  .history-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-
-  .history-item div:last-child {
-    width: 100%;
-    justify-content: space-between;
-  }
 }
