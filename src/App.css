@@ -1,0 +1,153 @@
+/* src/App.css */
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f4f7f6;
+  min-height: 100vh;
+}
+
+.header {
+  background-color: #2c3e50;
+  color: white;
+  padding: 30px;
+  border-radius: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.balance-box h2 {
+  margin: 5px 0 0 0;
+  font-size: 2rem;
+  color: #2ecc71;
+}
+
+.grid-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 25px;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+}
+
+.form-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+input, select {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.btn-add {
+  grid-column: span 2;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-add:hover {
+  background-color: #2980b9;
+}
+
+.history-list {
+  list-style: none;
+  padding: 0;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+  align-items: center;
+}
+
+.income-text { color: #27ae60; font-weight: bold; }
+.expense-text { color: #e74c3c; font-weight: bold; }
+
+.ai-box {
+  background-color: #ebf5ff;
+  border-left: 5px solid #3498db;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.ai-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #2980b9;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column; /* Logo em cima, saldo embaixo */
+    text-align: center;
+    gap: 15px;
+    padding: 20px;
+  }
+
+  .grid-layout {
+    grid-template-columns: 1fr; /* Vira uma coluna única */
+    gap: 15px;
+  }
+
+  .form-group {
+    grid-template-columns: 1fr; /* Inputs um embaixo do outro */
+  }
+
+  .btn-add {
+    grid-column: span 1;
+  }
+
+  .balance-box h2 {
+    font-size: 1.5rem;
+  }
+}
+
+/* Ajuste fino para celulares muito pequenos */
+@media (max-width: 480px) {
+  .container {
+    padding: 10px;
+  }
+  
+  .card {
+    padding: 15px;
+  }
+
+  .history-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .history-item div:last-child {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
