@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from "recharts";
 
+// Inicialização Supabase
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -30,10 +31,11 @@ export default function App() {
   const [name, setName] = useState("");
   const [value, setValue] = useState("");
   const [type, setType] = useState("income");
+  const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
 
-  // --- NOVOS ESTADOS PARA A META ---
+  // Estados da Meta Personalizada
   const [goalName, setGoalName] = useState("Reserva de Emergência");
   const [goalValue, setGoalValue] = useState(10000);
   const [isEditingGoal, setIsEditingGoal] = useState(false);
@@ -53,6 +55,29 @@ export default function App() {
   useEffect(() => {
     if (session) fetchTransactions();
   }, [session]);
+
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({ 
+          email, 
+          password, 
+          options: { data: { full_name: fullName } } 
+        });
+        if (error) throw error;
+        alert("Verifique seu e-mail!");
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+      }
+    } catch (error: any) {
+      alert(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchTransactions = async () => {
     const { data, error } = await supabase
@@ -84,7 +109,6 @@ export default function App() {
     if (!error) setTransactions(transactions.filter((t) => t.id !== id));
   };
 
-  // Funções para editar meta
   const handleEditGoal = () => {
     setTempGoalName(goalName);
     setTempGoalValue(goalValue.toString());
@@ -104,8 +128,6 @@ export default function App() {
   const income = filteredTransactions.filter((t) => t.type === "income").reduce((a, b) => a + (b.value || 0), 0);
   const expense = filteredTransactions.filter((t) => t.type === "expense").reduce((a, b) => a + (b.value || 0), 0);
   const balance = income - expense;
-  
-  // Progresso baseado na meta personalizada
   const progressPercent = Math.min(Math.round(balance > 0 ? (balance / goalValue) * 100 : 0), 100);
 
   const getMonthlyData = () => {
@@ -137,15 +159,10 @@ export default function App() {
               {isSignUp && <div className="auth-input"><span>Nome Completo</span><input type="text" value={fullName} onChange={e => setFullName(e.target.value)} /></div>}
               <div className="auth-input"><span>E-mail</span><input type="email" value={email} onChange={e => setEmail(e.target.value)} /></div>
               <div className="auth-input"><span>Senha</span><input type="password" value={password} onChange={e => setPassword(e.target.value)} /></div>
-              <button className="auth-btn-submit" onClick={async () => {
-                const { error } = isSignUp
-                  ? await supabase.auth.signUp({ email, password, options: { data: { full_name: fullName } } })
-                  : await supabase.auth.signInWithPassword({ email, password });
-                if (error) alert(error.message);
-              }}>{isSignUp ? "Cadastrar" : "Entrar"}</button>
+              <button className="auth-btn-submit" onClick={handleAuth} disabled={loading}>{loading ? "..." : isSignUp ? "Cadastrar" : "Entrar"}</button>
             </form>
             <div className="auth-divider"><span>OU</span></div>
-            <button className="auth-btn-google" onClick={() => supabase.auth.signInWithOAuth({ provider: "google" })}>
+            <button className="auth-btn-google" onClick={() => supabase.auth.signInWithOAuth({ provider: 'google' })}>
               <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" /> Entrar com Google
             </button>
             <p className="auth-toggle" onClick={() => setIsSignUp(!isSignUp)}>{isSignUp ? "Já tem conta? Entrar" : "Não tem conta? Criar agora"}</p>
@@ -177,8 +194,8 @@ export default function App() {
             <div className="section-title-row">
               {isEditingGoal ? (
                 <div className="goal-edit-container">
-                  <input className="goal-input-text" value={tempGoalName} onChange={e => setTempGoalName(e.target.value)} placeholder="Nome da Meta" />
-                  <input className="goal-input-value" type="number" value={tempGoalValue} onChange={e => setTempGoalValue(e.target.value)} placeholder="Valor R$" />
+                  <input className="goal-input-text" value={tempGoalName} onChange={e => setTempGoalName(e.target.value)} />
+                  <input className="goal-input-value" type="number" value={tempGoalValue} onChange={e => setTempGoalValue(e.target.value)} />
                   <button className="btn-save-goal" onClick={handleSaveGoal}><Check size={18} /></button>
                 </div>
               ) : (
@@ -186,14 +203,14 @@ export default function App() {
                   <h3>{goalName}</h3>
                   <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
                     <span className="meta-info-badge">Meta: R$ {goalValue.toLocaleString()}</span>
-                    <Edit2 size={16} className="edit-icon" onClick={handleEditGoal} style={{cursor: 'pointer', color: '#64748b'}} />
+                    <Edit2 size={16} onClick={handleEditGoal} style={{cursor: 'pointer', color: '#64748b'}} />
                   </div>
                 </>
               )}
             </div>
             <div className="app-progress-track"><div className="app-progress-bar" style={{ width: `${progressPercent}%` }}></div></div>
             <div className="app-progress-labels">
-              <span>{progressPercent}% da meta atingida</span>
+              <span>{progressPercent}% da meta batida</span>
               <span>Falta R$ {(goalValue - balance > 0 ? goalValue - balance : 0).toLocaleString()}</span>
             </div>
           </section>
@@ -237,7 +254,7 @@ export default function App() {
         <aside className="app-col-side">
           <div className="app-ai-insight-box">
             <div className="ai-box-header"><BrainCircuit /> IA Consultora</div>
-            <p>{balance < goalValue ? `Você está focado na sua meta: ${goalName}. Evite gastos desnecessários para atingir os R$ ${goalValue.toLocaleString()} planejados.` : "Meta batida! Você tem uma ótima saúde financeira."}</p>
+            <p>{balance < goalValue ? `Foco total na meta: ${goalName}.` : "Parabéns! Meta atingida."}</p>
           </div>
           <div className="app-glass-section">
             <h3 style={{ marginBottom: "15px", textAlign: "center" }}>Fluxo de Caixa</h3>
