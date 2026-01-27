@@ -1,26 +1,10 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import { createClient } from "@supabase/supabase-js";
-import {
-  BrainCircuit,
-  Wallet,
-  Plus,
-  Trash2,
-  LogOut,
-  Filter,
-} from "lucide-react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-  Legend,
-} from "recharts";
+import { BrainCircuit, Wallet, Trash2, LogOut, Filter } from "lucide-react";
+import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from "recharts";
 
-// Inicialização segura
+// Inicialização segura - Garanta que estas variáveis estejam na Vercel!
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -52,7 +36,6 @@ export default function App() {
     new Date().getMonth(),
   );
 
-  // Estados do formulário
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -109,7 +92,6 @@ export default function App() {
 
   const addTransaction = async () => {
     if (!name.trim() || !value || !session?.user?.id) return;
-
     const { data, error } = await supabase
       .from("transactions")
       .insert([
@@ -121,7 +103,6 @@ export default function App() {
         },
       ])
       .select();
-
     if (!error && data) {
       setTransactions([...transactions, data[0]]);
       setName("");
@@ -134,7 +115,6 @@ export default function App() {
     if (!error) setTransactions(transactions.filter((t) => t.id !== id));
   };
 
-  // --- LÓGICA DE DADOS ---
   const filteredTransactions = transactions.filter((t) => {
     const date = t.created_at ? new Date(t.created_at) : new Date();
     return date.getMonth() === selectedMonth;
@@ -173,12 +153,11 @@ export default function App() {
     if (balance <= 0)
       return "⚠️ Atenção: Você gastou mais do que ganhou. Corte custos variáveis.";
     if (balance < reserveGoal) {
-      return `💰 Reserva: Você tem R$ ${balance.toFixed(2)} sobrando. Guarde no Tesouro SELIC. Faltam R$ ${(reserveGoal - balance).toFixed(2)} para sua segurança total.`;
+      return `💰 Reserva: Você tem R$ ${balance.toFixed(2)} sobrando. Faltam R$ ${(reserveGoal - balance).toFixed(2)} para sua meta.`;
     }
-    return "🚀 Reserva OK! Diversifique em CDBs de longo prazo ou Fundos Imobiliários.";
+    return "🚀 Reserva OK! Diversifique em CDBs ou Fundos Imobiliários.";
   };
 
-  // TELA DE LOGIN / CADASTRO (RESTAURADA)
   if (!session) {
     return (
       <div className="welcome-wrapper">
@@ -197,7 +176,6 @@ export default function App() {
                 {isSignUp ? "Crie sua conta grátis" : "Bem-vindo(a) de volta!"}
               </h3>
             </div>
-
             <form className="auth-form-simulated" onSubmit={handleAuth}>
               {isSignUp && (
                 <div className="input-group">
@@ -243,11 +221,9 @@ export default function App() {
                     : "Entrar"}
               </button>
             </form>
-
             <div className="auth-divider">
               <span>OU</span>
             </div>
-
             <button
               onClick={() =>
                 supabase.auth.signInWithOAuth({ provider: "google" })
@@ -262,7 +238,6 @@ export default function App() {
               />
               <span>Continuar com o Google</span>
             </button>
-
             <p className="auth-footer-text">
               {isSignUp ? "Já tem uma conta?" : "Ainda não tem conta?"}{" "}
               <span
@@ -283,7 +258,7 @@ export default function App() {
       <header className="header">
         <div className="logo">
           <h1>
-            <Wallet size={28} /> Controle Financeiro{" "}
+            <Wallet size={28} /> Controle Financeiro
           </h1>
         </div>
         <div className="balance-box">
@@ -306,7 +281,6 @@ export default function App() {
           </button>
         </div>
       </header>
-
       <main className="grid-layout">
         <div className="left-column">
           <section className="card">
@@ -332,7 +306,6 @@ export default function App() {
               </button>
             </div>
           </section>
-
           <section className="card">
             <div
               className="card-header-filter"
@@ -392,7 +365,6 @@ export default function App() {
             </ul>
           </section>
         </div>
-
         <div className="right-column">
           <div className="ai-box">
             <div className="ai-title">
