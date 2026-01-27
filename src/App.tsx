@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import { createClient } from "@supabase/supabase-js";
-import { BrainCircuit, Wallet, Trash2, LogOut, Filter, Target, TrendingUp, TrendingDown, Plus } from "lucide-react";
+import { BrainCircuit, Wallet, Trash2, LogOut, Target, TrendingUp, TrendingDown, Plus } from "lucide-react";
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
