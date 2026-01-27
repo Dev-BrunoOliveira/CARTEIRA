@@ -1,14 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import { createClient } from "@supabase/supabase-js";
-import {
-  BrainCircuit,
-  Wallet,
-  Plus,
-  Trash2,
-  LogOut,
-  Filter,
-} from "lucide-react";
+import { BrainCircuit, Wallet, Plus, Trash2, LogOut, Filter } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -17,12 +10,15 @@ import {
   Tooltip,
   ResponsiveContainer,
   Cell,
-  Legend,
+  Legend
 } from "recharts";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Inicialização segura
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
 export default function App() {
   const [session, setSession] = useState<any>(null);
@@ -31,61 +27,68 @@ export default function App() {
   const [value, setValue] = useState("");
   const [type, setType] = useState("income");
   const [loading, setLoading] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState<number>(
-    new Date().getMonth(),
-  );
+  const [isSignUp, setIsSignUp] = useState(true);
+  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
 
-  const months = [
-    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
-  ];
+  // Estados do formulário
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session) fetchTransactions();
     });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      if (session) fetchTransactions();
-      else setTransactions([]);
     });
-
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchTransactions = async () => {
+  useEffect(() => {
+    if (session) fetchTransactions();
+  }, [session]);
+
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
+    try {
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { full_name: fullName } },
+        });
+        if (error) throw error;
+        alert("Cadastro realizado! Verifique seu e-mail.");
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+      }
+    } catch (error: any) {
+      alert("Erro: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchTransactions = async () => {
     const { data, error } = await supabase
       .from("transactions")
       .select("*")
       .order("created_at", { ascending: true });
-
     if (!error && data) setTransactions(data);
-    setLoading(false);
   };
 
   const addTransaction = async () => {
     if (!name.trim() || !value || !session) return;
     const { data, error } = await supabase
       .from("transactions")
-      .insert([
-        {
-          name: name.trim(),
-          value: parseFloat(value),
-          type,
-          user_id: session.user.id,
-        },
-      ])
+      .insert([{ name: name.trim(), value: parseFloat(value), type, user_id: session.user.id }])
       .select();
-
     if (!error && data) {
       setTransactions([...transactions, data[0]]);
-      setName("");
-      setValue("");
+      setName(""); setValue("");
     }
   };
 
@@ -94,71 +97,97 @@ export default function App() {
     if (!error) setTransactions(transactions.filter((t) => t.id !== id));
   };
 
-  const filteredTransactions = transactions.filter((t) => {
-    const date = new Date(t.created_at || t.id);
+  // --- LÓGICA DE DADOS ---
+  const filteredTransactions = transactions.filter(t => {
+    const date = t.created_at ? new Date(t.created_at) : new Date();
     return date.getMonth() === selectedMonth;
   });
 
   const getMonthlyData = () => {
-    const chartData: any = {};
+    const chartMap: any = {};
+    months.forEach(m => chartMap[m.substring(0,3)] = { name: m.substring(0,3), Ganhos: 0, Gastos: 0 });
     transactions.forEach((t) => {
-      const date = new Date(t.created_at || t.id);
+      const date = t.created_at ? new Date(t.created_at) : new Date();
       const mName = months[date.getMonth()].substring(0, 3);
-      if (!chartData[mName])
-        chartData[mName] = { name: mName, Ganhos: 0, Gastos: 0 };
-      if (t.type === "income") chartData[mName].Ganhos += t.value;
-      else chartData[mName].Gastos += t.value;
+      if (t.type === "income") chartMap[mName].Ganhos += (t.value || 0);
+      else chartMap[mName].Gastos += (t.value || 0);
     });
-    return Object.values(chartData);
+    return Object.values(chartMap);
   };
 
-  const income = filteredTransactions
-    .filter((t) => t.type === "income")
-    .reduce((a, b) => a + b.value, 0);
-  const expense = filteredTransactions
-    .filter((t) => t.type === "expense")
-    .reduce((a, b) => a + b.value, 0);
+  const income = filteredTransactions.filter(t => t.type === "income").reduce((a, b) => a + (b.value || 0), 0);
+  const expense = filteredTransactions.filter(t => t.type === "expense").reduce((a, b) => a + (b.value || 0), 0);
   const balance = income - expense;
 
-  // --- NOVA LÓGICA DE SUGESTÃO DE IA ---
-  const getAISuggestion = () => {
-    if (filteredTransactions.length === 0) 
-      return `Lance suas movimentações de ${months[selectedMonth]} para eu analisar seu perfil.`;
-    
-    if (balance <= 0) {
-      return "⚠️ Alerta: Seu saldo está zerado ou negativo. Foque em cortar gastos variáveis e quitar dívidas antes de investir.";
-    }
+  if (!session) {
+    return (
+      <div className="welcome-wrapper">
+        <div className="welcome-image">
+          <div className="welcome-overlay">
+            <h1>Descubra e controle sua vida financeira</h1>
+            <p>Gerencie seus ganhos e gastos em um só lugar!</p>
+          </div>
+        </div>
+        <div className="welcome-auth-section">
+          <div className="auth-card">
+            <div className="auth-header">
+              <Wallet size={40} color="#4f46e5" />
+              <h2 className="brand-name">FocusFinance</h2>
+              <h3 className="welcome-text">{isSignUp ? "Crie sua conta grátis" : "Bem-vindo(a) de volta!"}</h3>
+            </div>
 
-    // Cálculo da Reserva (6 meses de gastos)
-    const monthlyExpenses = expense;
-    const emergencyReserveGoal = monthlyExpenses * 6;
-    
-    if (balance > 0 && balance < emergencyReserveGoal) {
-      return `💰 Foco: Reserva de Emergência. Você tem R$ ${balance.toFixed(2)} sobrando. Recomendo o Tesouro SELIC ou CDB 100% CDI. Sua meta de segurança é R$ ${emergencyReserveGoal.toFixed(2)}.`;
-    }
+            <form className="auth-form-simulated" onSubmit={handleAuth}>
+              {isSignUp && (
+                <div className="input-group">
+                  <label>Nome Completo</label>
+                  <input type="text" placeholder="Bruno Oliveira" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+                </div>
+              )}
+              <div className="input-group">
+                <label>Email</label>
+                <input type="email" placeholder="seu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              </div>
+              <div className="input-group">
+                <label>Senha</label>
+                <input type="password" placeholder="Mínimo 6 caracteres" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              </div>
+              <button className="btn-login-main" type="submit" disabled={loading}>
+                {loading ? "Processando..." : isSignUp ? "Criar Conta" : "Entrar"}
+              </button>
+            </form>
 
-    return `🚀 Reserva OK! Com R$ ${balance.toFixed(2)} sobrando após sua reserva, diversifique: 70% em Renda Fixa (Tesouro IPCA), 20% em Fundos Imobiliários (FIIs) e 10% em Ações.`;
-  };
+            <div className="auth-divider"><span>OU</span></div>
 
-  if (!session) return null;
+            <button onClick={() => supabase.auth.signInWithOAuth({ provider: 'google' })} className="btn-google-auth" type="button">
+              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" width="20" />
+              <span>Continuar com o Google</span>
+            </button>
+
+            <p className="auth-footer-text">
+              {isSignUp ? "Já tem uma conta?" : "Ainda não tem conta?"}{" "}
+              <span className="link-text" onClick={() => setIsSignUp(!isSignUp)}>
+                {isSignUp ? "Fazer Login" : "Crie uma conta"}
+              </span>
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container">
       <header className="header">
-        <div className="logo">
-          <h1><Wallet size={28} /> FocusFinance</h1>
-        </div>
+        <div className="logo"><h1><Wallet size={28} /> FocusFinance</h1></div>
         <div className="balance-box">
-          <span>SALDO EM {months[selectedMonth].toUpperCase()}</span>
+          <span>SALDO EM {months[selectedMonth]?.toUpperCase()}</span>
           <h2 style={{ color: balance >= 0 ? "#2ecc71" : "#e74c3c" }}>
             R$ {balance.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
           </h2>
         </div>
         <div className="user-menu">
-          <small>Olá, {session.user.user_metadata.full_name?.split(" ")[0]}</small>
-          <button onClick={() => supabase.auth.signOut()} className="logout-button">
-            <LogOut size={18} />
-          </button>
+          <small>Olá, {session?.user?.user_metadata?.full_name?.split(' ')[0] || "Usuário"}</small>
+          <button onClick={() => supabase.auth.signOut()} className="logout-button"><LogOut size={18} /></button>
         </div>
       </header>
 
@@ -178,9 +207,9 @@ export default function App() {
           </section>
 
           <section className="card">
-            <div className="card-header-filter">
+            <div className="card-header-filter" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
               <h3>Histórico</h3>
-              <div className="filter-select">
+              <div className="filter-select" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Filter size={16} />
                 <select value={selectedMonth} onChange={(e) => setSelectedMonth(parseInt(e.target.value))}>
                   {months.map((m, index) => <option key={m} value={index}>{m}</option>)}
@@ -192,38 +221,31 @@ export default function App() {
                 <li key={t.id} className="history-item">
                   <div style={{ display: "flex", flexDirection: "column" }}>
                     <strong>{t.name}</strong>
-                    <small>{new Date(t.created_at || t.id).toLocaleDateString()}</small>
+                    <small>{t.created_at ? new Date(t.created_at).toLocaleDateString() : "Data pendente"}</small>
                   </div>
                   <div className="history-actions">
-                    <span className={t.type === "income" ? "income-text" : "expense-text"}>
-                      R$ {t.value.toFixed(2)}
-                    </span>
-                    <Trash2 size={18} color="#bbb" onClick={() => deleteTransaction(t.id)} style={{ cursor: "pointer" }} />
+                    <span className={t.type === "income" ? "income-text" : "expense-text"}>R$ {(t.value || 0).toFixed(2)}</span>
+                    <Trash2 size={18} color="#bbb" onClick={() => deleteTransaction(t.id)} style={{ cursor: "pointer", marginLeft: '10px' }} />
                   </div>
                 </li>
               ))}
-              {filteredTransactions.length === 0 && (
-                <p className="empty-msg">Sem registros em {months[selectedMonth]}.</p>
-              )}
             </ul>
           </section>
         </div>
 
         <div className="right-column">
           <div className="ai-box">
-            <div className="ai-title">
-              <BrainCircuit size={20} /> IA Financeira
-            </div>
-            <p className="ai-text">{getAISuggestion()}</p>
+            <div className="ai-title"><BrainCircuit size={20} /> IA Financeira</div>
+            <p className="ai-text">
+                {balance <= 0 ? "⚠️ Foco em reduzir gastos." : `💰 Sua meta de reserva é R$ ${(expense * 6).toFixed(2)}.`}
+            </p>
           </div>
-
-          <div className="card" style={{ height: "400px" }}>
-            <h3 style={{ marginBottom: "20px", textAlign: "center" }}>Comparativo Anual</h3>
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="card">
+            <h3 style={{ marginBottom: '15px', textAlign: 'center' }}>Comparativo Anual</h3>
+            <ResponsiveContainer width="100%" height={250}>
               <BarChart data={getMonthlyData()}>
                 <XAxis dataKey="name" />
-                <Tooltip formatter={(value: any) => `R$ ${value.toFixed(2)}`} />
-                <Legend />
+                <Tooltip />
                 <Bar dataKey="Ganhos" fill="#2ecc71" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="Gastos" fill="#e74c3c" radius={[4, 4, 0, 0]} />
               </BarChart>
