@@ -11,7 +11,7 @@ import {
   TrendingDown,
   Plus,
   Edit2,
-  Check
+  Check,
 } from "lucide-react";
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -35,7 +35,7 @@ export default function App() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
 
-  // Estados da Meta Personalizada
+  // Estados do Cofrinho Editável
   const [goalName, setGoalName] = useState("Reserva de Emergência");
   const [goalValue, setGoalValue] = useState(10000);
   const [isEditingGoal, setIsEditingGoal] = useState(false);
@@ -61,10 +61,10 @@ export default function App() {
     setLoading(true);
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({ 
-          email, 
-          password, 
-          options: { data: { full_name: fullName } } 
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { full_name: fullName } },
         });
         if (error) throw error;
         alert("Verifique seu e-mail!");
@@ -128,6 +128,7 @@ export default function App() {
   const income = filteredTransactions.filter((t) => t.type === "income").reduce((a, b) => a + (b.value || 0), 0);
   const expense = filteredTransactions.filter((t) => t.type === "expense").reduce((a, b) => a + (b.value || 0), 0);
   const balance = income - expense;
+  
   const progressPercent = Math.min(Math.round(balance > 0 ? (balance / goalValue) * 100 : 0), 100);
 
   const getMonthlyData = () => {
@@ -148,24 +149,39 @@ export default function App() {
         <div className="auth-side-banner">
           <div className="auth-overlay-info">
             <h1>Domine suas finanças.</h1>
-            <p>Organização inteligente para sua reserva de emergência.</p>
+            <p>Organização inteligente para seu cofrinho e reserva.</p>
           </div>
         </div>
         <div className="auth-side-form">
           <div className="auth-card-box">
             <div className="auth-logo"><Wallet size={42} /> <span>FocusFinance</span></div>
             <h2>{isSignUp ? "Crie sua conta" : "Bem-vindo de volta"}</h2>
-            <form onSubmit={e => e.preventDefault()} className="auth-main-form">
-              {isSignUp && <div className="auth-input"><span>Nome Completo</span><input type="text" value={fullName} onChange={e => setFullName(e.target.value)} /></div>}
-              <div className="auth-input"><span>E-mail</span><input type="email" value={email} onChange={e => setEmail(e.target.value)} /></div>
-              <div className="auth-input"><span>Senha</span><input type="password" value={password} onChange={e => setPassword(e.target.value)} /></div>
-              <button className="auth-btn-submit" onClick={handleAuth} disabled={loading}>{loading ? "..." : isSignUp ? "Cadastrar" : "Entrar"}</button>
+            <form onSubmit={(e) => e.preventDefault()} className="auth-main-form">
+              {isSignUp && (
+                <div className="auth-input">
+                  <span>Nome Completo</span>
+                  <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+                </div>
+              )}
+              <div className="auth-input">
+                <span>E-mail</span>
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+              </div>
+              <div className="auth-input">
+                <span>Senha</span>
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+              </div>
+              <button className="auth-btn-submit" onClick={handleAuth} disabled={loading}>
+                {loading ? "..." : isSignUp ? "Cadastrar" : "Entrar"}
+              </button>
             </form>
             <div className="auth-divider"><span>OU</span></div>
-            <button className="auth-btn-google" onClick={() => supabase.auth.signInWithOAuth({ provider: 'google' })}>
+            <button className="auth-btn-google" onClick={() => supabase.auth.signInWithOAuth({ provider: "google" })}>
               <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" /> Entrar com Google
             </button>
-            <p className="auth-toggle" onClick={() => setIsSignUp(!isSignUp)}>{isSignUp ? "Já tem conta? Entrar" : "Não tem conta? Criar agora"}</p>
+            <p className="auth-toggle" onClick={() => setIsSignUp(!isSignUp)}>
+              {isSignUp ? "Já tem conta? Entrar" : "Não tem conta? Criar agora"}
+            </p>
           </div>
         </div>
       </div>
@@ -185,7 +201,7 @@ export default function App() {
       <div className="app-summary-grid">
         <div className="app-stat-card income-card"><TrendingUp /> <div><small>Ganhos</small><strong>R$ {income.toLocaleString()}</strong></div></div>
         <div className="app-stat-card expense-card"><TrendingDown /> <div><small>Gastos</small><strong>R$ {expense.toLocaleString()}</strong></div></div>
-        <div className="app-stat-card balance-card"><Target /> <div><small>Saldo Livre</small><strong className={balance >= 0 ? "pos" : "neg"}>R$ {balance.toLocaleString()}</strong></div></div>
+        <div className="app-stat-card balance-card"><Target /> <div><small>Saldo Disponível</small><strong className={balance >= 0 ? "pos" : "neg"}>R$ {balance.toLocaleString()}</strong></div></div>
       </div>
 
       <div className="app-content-columns">
@@ -194,23 +210,23 @@ export default function App() {
             <div className="section-title-row">
               {isEditingGoal ? (
                 <div className="goal-edit-container">
-                  <input className="goal-input-text" value={tempGoalName} onChange={e => setTempGoalName(e.target.value)} />
-                  <input className="goal-input-value" type="number" value={tempGoalValue} onChange={e => setTempGoalValue(e.target.value)} />
+                  <input className="goal-input-text" value={tempGoalName} onChange={(e) => setTempGoalName(e.target.value)} placeholder="Nome" />
+                  <input className="goal-input-value" type="number" value={tempGoalValue} onChange={(e) => setTempGoalValue(e.target.value)} placeholder="Valor" />
                   <button className="btn-save-goal" onClick={handleSaveGoal}><Check size={18} /></button>
                 </div>
               ) : (
                 <>
-                  <h3>{goalName}</h3>
-                  <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                  <h3>{goalName} 🪙</h3>
+                  <div className="meta-actions">
                     <span className="meta-info-badge">Meta: R$ {goalValue.toLocaleString()}</span>
-                    <Edit2 size={16} onClick={handleEditGoal} style={{cursor: 'pointer', color: '#64748b'}} />
+                    <Edit2 size={16} onClick={handleEditGoal} style={{ cursor: "pointer", color: "#64748b" }} />
                   </div>
                 </>
               )}
             </div>
             <div className="app-progress-track"><div className="app-progress-bar" style={{ width: `${progressPercent}%` }}></div></div>
             <div className="app-progress-labels">
-              <span>{progressPercent}% da meta batida</span>
+              <span>{progressPercent}% atingido</span>
               <span>Falta R$ {(goalValue - balance > 0 ? goalValue - balance : 0).toLocaleString()}</span>
             </div>
           </section>
@@ -218,9 +234,9 @@ export default function App() {
           <section className="app-glass-section">
             <h3>Novo Lançamento</h3>
             <div className="app-quick-form">
-              <input placeholder="Descrição" value={name} onChange={e => setName(e.target.value)} />
-              <input type="number" placeholder="Valor" value={value} onChange={e => setValue(e.target.value)} />
-              <select value={type} onChange={e => setType(e.target.value)}>
+              <input placeholder="Descrição" value={name} onChange={(e) => setName(e.target.value)} />
+              <input type="number" placeholder="Valor" value={value} onChange={(e) => setValue(e.target.value)} />
+              <select value={type} onChange={(e) => setType(e.target.value)}>
                 <option value="income">Entrada</option>
                 <option value="expense">Saída</option>
               </select>
@@ -231,15 +247,20 @@ export default function App() {
           <section className="app-glass-section">
             <div className="section-title-row">
               <h3>Histórico Financeiro</h3>
-              <select className="app-month-filter" value={selectedMonth} onChange={e => setSelectedMonth(parseInt(e.target.value))}>
+              <select className="app-month-filter" value={selectedMonth} onChange={(e) => setSelectedMonth(parseInt(e.target.value))}>
                 {months.map((m, i) => <option key={m} value={i}>{m}</option>)}
               </select>
             </div>
             <div className="app-history-container">
-              {filteredTransactions.reverse().map(t => (
+              {filteredTransactions.reverse().map((t) => (
                 <div key={t.id} className="app-history-row">
-                  <div className="history-info"><strong>{t.name}</strong><small>{new Date(t.created_at).toLocaleDateString()}</small></div>
-                  <div className="history-value-actions">
+                  {/* AJUSTE AQUI: Criamos um grupo para Nome e Data */}
+                  <div className="history-info-group">
+                    <strong>{t.name}</strong>
+                    <small className="history-item-date">{new Date(t.created_at).toLocaleDateString()}</small>
+                  </div>
+                  {/* AJUSTE AQUI: Grupo para Valor e Lixeira */}
+                  <div className="history-value-group">
                     <span className={t.type === "income" ? "val-plus" : "val-minus"}>
                       {t.type === "income" ? "+" : "-"} R$ {t.value.toFixed(2)}
                     </span>
@@ -254,7 +275,7 @@ export default function App() {
         <aside className="app-col-side">
           <div className="app-ai-insight-box">
             <div className="ai-box-header"><BrainCircuit /> IA Consultora</div>
-            <p>{balance < goalValue ? `Foco total na meta: ${goalName}.` : "Parabéns! Meta atingida."}</p>
+            <p>{balance < goalValue ? `Foco na meta: ${goalName}.` : "Excelente! Meta batida."}</p>
           </div>
           <div className="app-glass-section">
             <h3 style={{ marginBottom: "15px", textAlign: "center" }}>Fluxo de Caixa</h3>
