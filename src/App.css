@@ -20,7 +20,6 @@ body {
   line-height: 1.5;
 }
 
-/* AUTH SCREEN */
 .auth-fullscreen {
   display: flex;
   height: 100vh;
@@ -139,7 +138,6 @@ body {
   width: 22px;
 }
 
-/* DASHBOARD LAYOUT */
 .app-main-layout {
   max-width: 1300px;
   margin: 0 auto;
@@ -172,7 +170,6 @@ body {
   gap: 15px;
 }
 
-/* STATS CARDS */
 .app-summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -209,7 +206,6 @@ body {
   color: var(--fin-primary);
 }
 
-/* MAIN CONTENT */
 .app-content-columns {
   display: grid;
   grid-template-columns: 1.8fr 1.2fr;
@@ -225,7 +221,6 @@ body {
   border: 1px solid #f1f5f9;
 }
 
-/* EDIÇÃO DE META */
 .goal-edit-container {
   display: flex;
   gap: 8px;
@@ -253,7 +248,6 @@ body {
   cursor: pointer;
 }
 
-/* PROGRESS BAR */
 .app-progress-track {
   background: #f1f5f9;
   height: 14px;
@@ -268,7 +262,6 @@ body {
   transition: 1s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* FORM INLINE */
 .app-quick-form {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr auto;
@@ -307,11 +300,10 @@ body {
   border-bottom: 1px solid #f8fafc;
 }
 
-/* AFASSA O NOME DA DATA (LADO ESQUERDO) */
 .history-info {
   display: flex;
   align-items: center;
-  gap: 15px !important; /* ISSO DÁ O ESPAÇO QUE VOCÊ PRECISA */
+  gap: 15px !important;
 }
 
 .history-info small {
@@ -319,15 +311,13 @@ body {
   font-weight: 600;
 }
 
-/* AFASSA O VALOR R$ DA LIXEIRA (LADO DIREITO) */
 .history-value-actions {
   display: flex;
   align-items: center;
-  gap: 20px !important; /* ISSO DÁ O ESPAÇO NO VALOR */
+  gap: 20px !important;
 }
 
-/* IA PANEL */
-.app-ai-insight-box {
+ANEL */ .app-ai-insight-box {
   background: linear-gradient(135deg, var(--fin-indigo), #4338ca);
   color: white;
   padding: 25px;
@@ -335,7 +325,6 @@ body {
   margin-bottom: 25px;
 }
 
-/* RESPONSIVIDADE FINAL */
 @media (max-width: 1024px) {
   .app-content-columns {
     grid-template-columns: 1fr;

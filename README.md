@@ -1,73 +1,38 @@
-# React + TypeScript + Vite
+# 💰 FocusFinance - Gestão Financeira Inteligente
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+O **FocusFinance** é uma aplicação web moderna focada na organização pessoal e na construção de uma **Reserva de Emergência**. Com uma interface inspirada em fintechs, o app oferece uma experiência intuitiva para gerenciar transações e acompanhar metas financeiras em tempo real.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Funcionalidades Principais
 
-## React Compiler
+- **🔒 Autenticação Robusta**: Login seguro via e-mail/senha ou conta Google (Supabase Auth).
+- **💳 Gestão de Fluxo**: Lançamento ágil de entradas e saídas com descrição e valor.
+- **📊 Dashboard Estilo Fintech**: Cards de resumo para Ganhos, Gastos e Saldo Livre.
+- **🎯 Meta Personalizável**: Sistema exclusivo para definir, renomear e editar o valor do seu objetivo financeiro.
+- **📈 Barra de Progresso**: Acompanhamento visual dinâmico do progresso da sua reserva.
+- **🧠 IA Consultora**: Insights automáticos baseados no seu saldo e metas (Dicas de economia e investimentos).
+- **📅 Filtro Histórico**: Visualização organizada por meses para facilitar a conciliação bancária.
+- **📉 Visualização de Dados**: Gráficos anuais comparativos para análise de fluxo de caixa.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 🛠️ Tecnologias Utilizadas
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Este projeto foi construído com as melhores práticas de desenvolvimento aprendidas no curso de **Análise e Desenvolvimento de Sistemas (ADS)**:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **Frontend**: [React.js](https://reactjs.org/) + [Vite](https://vitejs.dev/)
+- **Linguagem**: [TypeScript](https://www.typescriptlang.org/) (Segurança e tipagem estática)
+- **Backend-as-a-Service**: [Supabase](https://supabase.com/) (PostgreSQL + Auth)
+- **Estilização**: CSS3 Moderno (Responsivo & Grid/Flexbox)
+- **Ícones**: [Lucide React](https://lucide.dev/)
+- **Gráficos**: [Recharts](https://recharts.org/)
+- **Deploy**: [Vercel](https://vercel.com/)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 📱 Responsividade
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+O design é **Mobile-First**, garantindo que todas as funcionalidades estejam acessíveis tanto em computadores quanto em tablets e smartphones.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
