@@ -4,7 +4,7 @@
   --fin-danger: #f43f5e;
   --fin-dark: #2a0f23;
   --fin-bg: #f8fafc;
-  --fin-indigo: #6366f1; /* Para manter o destaque da IA */
+  --fin-indigo: #6366f1;
 }
 
 * {
@@ -30,8 +30,10 @@ body {
 
 .auth-side-banner {
   flex: 1.2;
-  background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.6)),
-    url("https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=1471") center/cover;
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.6)),
+    url("https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=1471")
+      center/cover;
   display: flex;
   align-items: center;
   padding: 80px;
@@ -113,7 +115,9 @@ body {
   transition: transform 0.1s;
 }
 
-.auth-btn-submit:active { transform: scale(0.98); }
+.auth-btn-submit:active {
+  transform: scale(0.98);
+}
 
 .auth-btn-google {
   width: 100%;
@@ -131,7 +135,9 @@ body {
   margin-top: 20px;
 }
 
-.auth-btn-google img { width: 22px; }
+.auth-btn-google img {
+  width: 22px;
+}
 
 /* DASHBOARD LAYOUT */
 .app-main-layout {
@@ -190,9 +196,18 @@ body {
   display: block;
 }
 
-.income-card { border-top: 5px solid var(--fin-success); color: var(--fin-success); }
-.expense-card { border-top: 5px solid var(--fin-danger); color: var(--fin-danger); }
-.balance-card { border-top: 5px solid var(--fin-primary); color: var(--fin-primary); }
+.income-card {
+  border-top: 5px solid var(--fin-success);
+  color: var(--fin-success);
+}
+.expense-card {
+  border-top: 5px solid var(--fin-danger);
+  color: var(--fin-danger);
+}
+.balance-card {
+  border-top: 5px solid var(--fin-primary);
+  color: var(--fin-primary);
+}
 
 /* MAIN CONTENT */
 .app-content-columns {
@@ -217,9 +232,26 @@ body {
   width: 100%;
 }
 
-.goal-input-text { flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 8px; }
-.goal-input-value { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 8px; }
-.btn-save-goal { background: var(--fin-success); color: white; border: none; border-radius: 8px; padding: 0 12px; cursor: pointer; }
+.goal-input-text {
+  flex: 2;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+.goal-input-value {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+.btn-save-goal {
+  background: var(--fin-success);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0 12px;
+  cursor: pointer;
+}
 
 /* PROGRESS BAR */
 .app-progress-track {
@@ -243,7 +275,8 @@ body {
   gap: 10px;
 }
 
-.app-quick-form input, .app-quick-form select {
+.app-quick-form input,
+.app-quick-form select {
   padding: 12px;
   border: 2px solid #f1f5f9;
   border-radius: 10px;
@@ -260,22 +293,37 @@ body {
   cursor: pointer;
 }
 
-/* HISTORY */
+/* HISTORY - AQUI ESTÁ A MUDANÇA */
 .app-history-container {
   max-height: 400px;
   overflow-y: auto;
   padding-right: 5px;
 }
 
-/* Scrollbar Customizada */
-.app-history-container::-webkit-scrollbar { width: 5px; }
-.app-history-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-
 .app-history-row {
   display: flex;
   justify-content: space-between;
   padding: 15px 0;
   border-bottom: 1px solid #f8fafc;
+}
+
+/* AFASSA O NOME DA DATA (LADO ESQUERDO) */
+.history-info {
+  display: flex;
+  align-items: center;
+  gap: 15px !important; /* ISSO DÁ O ESPAÇO QUE VOCÊ PRECISA */
+}
+
+.history-info small {
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+/* AFASSA O VALOR R$ DA LIXEIRA (LADO DIREITO) */
+.history-value-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px !important; /* ISSO DÁ O ESPAÇO NO VALOR */
 }
 
 /* IA PANEL */
@@ -289,17 +337,34 @@ body {
 
 /* RESPONSIVIDADE FINAL */
 @media (max-width: 1024px) {
-  .app-content-columns { grid-template-columns: 1fr; }
+  .app-content-columns {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 768px) {
-  .app-quick-form { grid-template-columns: 1fr; }
-  .app-top-nav { flex-direction: column; gap: 15px; text-align: center; }
-  .auth-side-banner { display: none; }
+  .app-quick-form {
+    grid-template-columns: 1fr;
+  }
+  .app-top-nav {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+  .auth-side-banner {
+    display: none;
+  }
 }
 
 @media (max-width: 480px) {
-  .app-stat-card { flex-direction: column; text-align: center; }
-  .app-summary-grid { grid-template-columns: 1fr; }
-  .goal-edit-container { flex-direction: column; }
+  .app-stat-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  .app-summary-grid {
+    grid-template-columns: 1fr;
+  }
+  .goal-edit-container {
+    flex-direction: column;
+  }
 }
