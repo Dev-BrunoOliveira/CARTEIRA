@@ -9,7 +9,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const months = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-const ESSENCIAIS = ["Salario", "Taxa Cartorial","Feira Domingo","Açougue", "Condominio", "FAM", "TIM","Carregador","Mercado", "ENEL", "CLARO", "Academia", "CLOUDDY", "Apple", "Cartão da Larissa", "Nubank","Condução","Bombaniere", "VT+ ALIMENTAÇÃO"];
+const ESSENCIAIS = ["Salario", "Taxa Cartorial","Feira Domingo","Açougue", "Condominio", "FAM", "TIM","Carregador","Mercado", "ENEL", "CLARO", "Academia", "CLOUDDY", "Apple", "Cartão da Larissa", "Nubank","Condução","Bomboniere", "VT+ ALIMENTAÇÃO"];
 
 export default function App() {
   const [session, setSession] = useState<any>(null);
