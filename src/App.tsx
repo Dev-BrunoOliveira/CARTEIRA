@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import { createClient } from "@supabase/supabase-js";
-import { BrainCircuit, Wallet, Trash2, LogOut, Target, TrendingUp, TrendingDown, Plus, Check } from "lucide-react";
+import { Wallet, Trash2, LogOut, Plus } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
@@ -96,7 +96,7 @@ export default function App() {
         <div className="auth-side-banner">
           <div className="auth-overlay-info">
             <h1>Domine suas finanças.</h1>
-            <p>Organização inteligente para seu cofrinho.</p>
+            <p>Organização inteligente para seu dinheiro.</p>
           </div>
         </div>
         <div className="auth-side-form">
