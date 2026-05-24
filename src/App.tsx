@@ -11,7 +11,6 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
@@ -39,29 +38,18 @@ const ESSENCIAIS = [
   "Açougue",
   "Feira",
   "Condominio",
-  "Faculdade",
-  "Aluguel",
-  "Luz",
   "FAM",
   "TIM",
   "Carregador",
   "Mercado",
-  "Enel",
   "ENEL",
-  "Claro",
   "CLARO",
   "VIVO",
   "Vivo",
   "Tim",
   "Claro",
   "Academia",
-  "Vale Transporte",
   "VT",
-  "Netflix",
-  "Spotify",
-  "Disney+",
-  "Prime Video",
-  "HBO Max",
   "CLOUDDY",
   "Apple",
   "Cartão da Larissa",
@@ -193,26 +181,21 @@ export default function App() {
     return Object.values(chartMap);
   };
 
+  // FUNÇÃO DE ANÁLISE REFEITA COM FETCH DIRETO SEM CORS LOCK
   const generateAiAnalysis = async () => {
     if (filteredTransactions.length === 0) {
       alert("Nenhuma transação encontrada neste mês para analisar.");
       return;
     }
 
-   
     const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
-    
     if (!geminiKey) {
-      setAiInsights("Erro de Ambiente: A chave VITE_GEMINI_API_KEY não foi encontrada.");
+      setAiInsights("Erro: Chave de API não configurada corretamente.");
       return;
     }
 
     setLoadingAi(true);
     try {
-      
-      const clientAI = new GoogleGenerativeAI(geminiKey);
-      const model = clientAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
       const dadosFinanceiros = filteredTransactions.map((t) => ({
         nome: t.name,
         valor: t.value,
@@ -220,7 +203,7 @@ export default function App() {
         tipoGasto: ESSENCIAIS.includes(t.name) ? "Essencial" : "Supérfluo",
       }));
 
-      const prompt = `
+      const promptText = `
         Atue como um analista financeiro de elite. Analise os seguintes dados do mês de ${months[selectedMonth]}:
         ${JSON.stringify(dadosFinanceiros, null, 2)}
         
@@ -228,11 +211,40 @@ export default function App() {
         Em seguida, monte uma tabela em formato Markdown com os 3 maiores gastos encontrados.
       `;
 
-      const result = await model.generateContent(prompt);
-      setAiInsights(result.response.text());
+      // Chamada nativa HTTP para a API estável do Gemini 1.5 Flash
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  {
+                    text: promptText,
+                  },
+                ],
+              },
+            ],
+          }),
+        }
+      );
+
+      const resData = await response.json();
+
+      if (resData.candidates && resData.candidates[0].content.parts[0].text) {
+        setAiInsights(resData.candidates[0].content.parts[0].text);
+      } else if (resData.error) {
+        setAiInsights(`Erro da API do Google: ${resData.error.message}`);
+      } else {
+        setAiInsights("Resposta inesperada da IA. Verifique os dados.");
+      }
     } catch (error: any) {
-      console.error("Erro detalhado na IA:", error);
-      setAiInsights("Erro ao consultar a IA. Verifique as configurações de rede ou permissões da chave.");
+      console.error("Erro na requisição da IA:", error);
+      setAiInsights("Erro ao conectar com o servidor do Gemini. Tente novamente.");
     } finally {
       setLoadingAi(false);
     }
@@ -360,7 +372,7 @@ export default function App() {
             </p>
           </section>
 
-          {/* CONSULTORIA IA POSICIONADA NO LUGAR CORRETO */}
+          {/* CAIXA DA IA CONFIGURADA */}
           <section className="app-glass-section ai-section">
             <div className="section-title-row">
               <h3>
