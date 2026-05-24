@@ -224,6 +224,39 @@ body {
 
 .btn-delete-row:hover { color: var(--danger); }
 
+.ai-section {
+  border: 1px solid rgba(139, 92, 246, 0.2) !important; 
+}
+
+.app-btn-ai {
+  background: #8b5cf6;
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.app-btn-ai:hover {
+  background: #7c3aed;
+}
+
+.app-btn-ai:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+}
+
+.ai-response-container {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 @media (max-width: 900px) {
   .auth-side-banner { display: none; } 

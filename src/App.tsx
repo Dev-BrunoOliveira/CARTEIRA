@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import { createClient } from "@supabase/supabase-js";
-import { Wallet, Trash2, LogOut, Plus } from "lucide-react";
+import { Wallet, Trash2, LogOut, Plus, BrainCircuit } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -11,10 +11,14 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+const ai = new GoogleGenerativeAI(geminiKey);
 
 const months = [
   "Jan",
@@ -30,6 +34,7 @@ const months = [
   "Nov",
   "Dez",
 ];
+
 const ESSENCIAIS = [
   "Salario",
   "Taxa Cartorial",
@@ -72,6 +77,10 @@ export default function App() {
   const [selectedMonth, setSelectedMonth] = useState<number>(
     new Date().getMonth(),
   );
+
+  // Estados da IA
+  const [aiInsights, setAiInsights] = useState<string>("");
+  const [loadingAi, setLoadingAi] = useState<boolean>(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -159,6 +168,7 @@ export default function App() {
     (a, b) => a + (b.value || 0),
     0,
   );
+
   const biggestWaste =
     nonEssentialExpenses.length > 0
       ? nonEssentialExpenses.sort((a, b) => b.value - a.value)[0]
@@ -173,6 +183,40 @@ export default function App() {
       else chartMap[mName].Gastos += t.value || 0;
     });
     return Object.values(chartMap);
+  };
+
+  const generateAiAnalysis = async () => {
+    if (filteredTransactions.length === 0) {
+      alert("Nenhuma transação encontrada neste mês para analisar.");
+      return;
+    }
+    setLoadingAi(true);
+    try {
+      const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+      const dadosFinanceiros = filteredTransactions.map((t) => ({
+        nome: t.name,
+        valor: t.value,
+        tipo: t.type === "income" ? "Ganho" : "Gasto",
+        tipoGasto: ESSENCIAIS.includes(t.name) ? "Essencial" : "Supérfluo",
+      }));
+
+      const prompt = `
+        Atue como um analista financeiro de elite. Analise os seguintes dados do mês de ${months[selectedMonth]}:
+        ${JSON.stringify(dadosFinanceiros, null, 2)}
+        
+        Resuma em um parágrafo curto e direto quais são os principais gargalos e dê um conselho prático focado em economia.
+        Em seguida, monte uma tabela em formato Markdown com os 3 maiores gastos encontrados.
+      `;
+
+      const result = await model.generateContent(prompt);
+      setAiInsights(result.response.text());
+    } catch (error) {
+      console.error("Erro na IA:", error);
+      setAiInsights("Erro ao consultar a IA. Verifique sua chave de API.");
+    } finally {
+      setLoadingAi(false);
+    }
   };
 
   if (loadingInitial)
@@ -295,6 +339,36 @@ export default function App() {
                 ? `⚠️ Seu maior gasto supérfluo é "${biggestWaste.name}" (R$ ${biggestWaste.value.toFixed(2)}).`
                 : "✅ Ótimo! Seus gastos estão focados no essencial."}
             </p>
+          </section>
+
+          {/* SEÇÃO DA IA MOVIDA PARA A COLUNA PRINCIPAL */}
+          <section className="app-glass-section ai-section">
+            <div className="section-title-row">
+              <h3>
+                <BrainCircuit size={20} color="#8b5cf6" /> Consultoria IA
+              </h3>
+              <button
+                className="app-btn-ai"
+                onClick={generateAiAnalysis}
+                disabled={loadingAi}
+              >
+                {loadingAi ? "Analisando..." : "Analisar Mês"}
+              </button>
+            </div>
+            {aiInsights && (
+              <div className="ai-response-container">
+                <div
+                  style={{
+                    whiteSpace: "pre-line",
+                    fontSize: "14px",
+                    marginTop: "15px",
+                    color: "#475569",
+                  }}
+                >
+                  {aiInsights}
+                </div>
+              </div>
+            )}
           </section>
 
           <section className="app-glass-section">
