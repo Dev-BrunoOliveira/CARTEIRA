@@ -308,6 +308,7 @@ export default function App() {
         <div className="app-stat-card income-card">
           <div>
             <small>Ganhos</small>
+            {/* FIX: Corrigido fechamento da tag strong aqui */}
             <strong>R$ {income.toLocaleString()}</strong>
           </div>
         </div>
@@ -341,7 +342,7 @@ export default function App() {
             </p>
           </section>
 
-          {/* POSICIONAMENTO DA IA CORRIGIDO NA COLUNA PRINCIPAL */}
+          {/* SEÇÃO DA IA ALINHADA NO MEIO DA TELA PRINCIPAL */}
           <section className="app-glass-section ai-section">
             <div className="section-title-row">
               <h3>
