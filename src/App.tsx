@@ -341,7 +341,7 @@ export default function App() {
             </p>
           </section>
 
-          {/* SEÇÃO DA IA MOVIDA PARA A COLUNA PRINCIPAL */}
+          {/* POSICIONAMENTO DA IA CORRIGIDO NA COLUNA PRINCIPAL */}
           <section className="app-glass-section ai-section">
             <div className="section-title-row">
               <h3>
