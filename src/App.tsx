@@ -17,9 +17,6 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
-const ai = new GoogleGenerativeAI(geminiKey);
-
 const months = [
   "Jan",
   "Fev",
@@ -42,18 +39,29 @@ const ESSENCIAIS = [
   "Açougue",
   "Feira",
   "Condominio",
+  "Faculdade",
+  "Aluguel",
+  "Luz",
   "FAM",
   "TIM",
   "Carregador",
   "Mercado",
+  "Enel",
   "ENEL",
+  "Claro",
   "CLARO",
   "VIVO",
   "Vivo",
   "Tim",
   "Claro",
   "Academia",
+  "Vale Transporte",
   "VT",
+  "Netflix",
+  "Spotify",
+  "Disney+",
+  "Prime Video",
+  "HBO Max",
   "CLOUDDY",
   "Apple",
   "Cartão da Larissa",
@@ -190,9 +198,20 @@ export default function App() {
       alert("Nenhuma transação encontrada neste mês para analisar.");
       return;
     }
+
+   
+    const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+    
+    if (!geminiKey) {
+      setAiInsights("Erro de Ambiente: A chave VITE_GEMINI_API_KEY não foi encontrada.");
+      return;
+    }
+
     setLoadingAi(true);
     try {
-      const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+      
+      const clientAI = new GoogleGenerativeAI(geminiKey);
+      const model = clientAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
       const dadosFinanceiros = filteredTransactions.map((t) => ({
         nome: t.name,
@@ -211,9 +230,9 @@ export default function App() {
 
       const result = await model.generateContent(prompt);
       setAiInsights(result.response.text());
-    } catch (error) {
-      console.error("Erro na IA:", error);
-      setAiInsights("Erro ao consultar a IA. Verifique sua chave de API.");
+    } catch (error: any) {
+      console.error("Erro detalhado na IA:", error);
+      setAiInsights("Erro ao consultar a IA. Verifique as configurações de rede ou permissões da chave.");
     } finally {
       setLoadingAi(false);
     }
@@ -308,7 +327,6 @@ export default function App() {
         <div className="app-stat-card income-card">
           <div>
             <small>Ganhos</small>
-            {/* FIX: Corrigido fechamento da tag strong aqui */}
             <strong>R$ {income.toLocaleString()}</strong>
           </div>
         </div>
@@ -342,7 +360,7 @@ export default function App() {
             </p>
           </section>
 
-          {/* SEÇÃO DA IA ALINHADA NO MEIO DA TELA PRINCIPAL */}
+          {/* CONSULTORIA IA POSICIONADA NO LUGAR CORRETO */}
           <section className="app-glass-section ai-section">
             <div className="section-title-row">
               <h3>
