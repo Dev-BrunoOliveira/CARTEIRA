@@ -85,7 +85,6 @@ export default function App() {
     new Date().getMonth(),
   );
 
-  // Estados da IA
   const [aiInsights, setAiInsights] = useState<string>("");
   const [loadingAi, setLoadingAi] = useState<boolean>(false);
 
@@ -192,7 +191,6 @@ export default function App() {
     return Object.values(chartMap);
   };
 
-  // FUNÇÃO DE REQUISIÇÃO RAW BLINDADA CONTRA ERROS DE VERSÃO
   const generateAiAnalysis = async () => {
     if (filteredTransactions.length === 0) {
       alert("Nenhuma transação encontrada neste mês para analisar.");
@@ -222,9 +220,9 @@ export default function App() {
         Em seguida, monte uma tabela em formato Markdown com os 3 maiores gastos encontrados.
       `;
 
-      // Endpoint v1 estruturado limpo para evitar conflitos de rotas beta do Google
+      // FIX 1: endpoint v1beta + modelo gemini-2.0-flash (gemini-1.5-flash foi descontinuado na v1)
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
         {
           method: "POST",
           headers: {
@@ -246,7 +244,6 @@ export default function App() {
 
       const resData = await response.json();
 
-      // Tratamento de sucesso na árvore de resposta do Google v1
       if (resData.candidates && resData.candidates[0]?.content?.parts?.[0]?.text) {
         setAiInsights(resData.candidates[0].content.parts[0].text);
       } else if (resData.error) {
@@ -385,7 +382,6 @@ export default function App() {
             </p>
           </section>
 
-          {/* CONSULTORIA IA POSICIONADA NO LUGAR CORRETO */}
           <section className="app-glass-section ai-section">
             <div className="section-title-row">
               <h3>
@@ -455,10 +451,10 @@ export default function App() {
               </select>
             </div>
             <div className="app-history-container">
+              {/* FIX 2: removido o "return (" solto que estava sendo renderizado como texto */}
               {filteredTransactions.reverse().map((t) => (
                 <div key={t.id} className="app-history-row">
                   <div className="history-info-group">
-                    return (
                     <strong>{t.name}</strong>
                     <div className="history-spacer"></div>
                     <span
