@@ -38,18 +38,29 @@ const ESSENCIAIS = [
   "Açougue",
   "Feira",
   "Condominio",
+  "Faculdade",
+  "Aluguel",
+  "Luz",
   "FAM",
   "TIM",
   "Carregador",
   "Mercado",
+  "Enel",
   "ENEL",
+  "Claro",
   "CLARO",
   "VIVO",
   "Vivo",
   "Tim",
   "Claro",
   "Academia",
+  "Vale Transporte",
   "VT",
+  "Netflix",
+  "Spotify",
+  "Disney+",
+  "Prime Video",
+  "HBO Max",
   "CLOUDDY",
   "Apple",
   "Cartão da Larissa",
@@ -181,7 +192,7 @@ export default function App() {
     return Object.values(chartMap);
   };
 
-  // FUNÇÃO DE ANÁLISE REFEITA COM FETCH DIRETO SEM CORS LOCK
+  // FUNÇÃO DE REQUISIÇÃO RAW BLINDADA CONTRA ERROS DE VERSÃO
   const generateAiAnalysis = async () => {
     if (filteredTransactions.length === 0) {
       alert("Nenhuma transação encontrada neste mês para analisar.");
@@ -190,7 +201,7 @@ export default function App() {
 
     const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
     if (!geminiKey) {
-      setAiInsights("Erro: Chave de API não configurada corretamente.");
+      setAiInsights("Erro: Chave de API (VITE_GEMINI_API_KEY) não encontrada.");
       return;
     }
 
@@ -211,9 +222,9 @@ export default function App() {
         Em seguida, monte uma tabela em formato Markdown com os 3 maiores gastos encontrados.
       `;
 
-      // Chamada nativa HTTP para a API estável do Gemini 1.5 Flash
+      // Endpoint v1 estruturado limpo para evitar conflitos de rotas beta do Google
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
+        `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
         {
           method: "POST",
           headers: {
@@ -235,16 +246,18 @@ export default function App() {
 
       const resData = await response.json();
 
-      if (resData.candidates && resData.candidates[0].content.parts[0].text) {
+      // Tratamento de sucesso na árvore de resposta do Google v1
+      if (resData.candidates && resData.candidates[0]?.content?.parts?.[0]?.text) {
         setAiInsights(resData.candidates[0].content.parts[0].text);
       } else if (resData.error) {
-        setAiInsights(`Erro da API do Google: ${resData.error.message}`);
+        setAiInsights(`Erro retornado pelo Google: ${resData.error.message}`);
       } else {
-        setAiInsights("Resposta inesperada da IA. Verifique os dados.");
+        setAiInsights("Nota: Erro de parse na resposta. Verifique o console da aplicação.");
+        console.log("Resposta bruta do Google:", resData);
       }
     } catch (error: any) {
-      console.error("Erro na requisição da IA:", error);
-      setAiInsights("Erro ao conectar com o servidor do Gemini. Tente novamente.");
+      console.error("Erro na requisição HTTP da IA:", error);
+      setAiInsights("Erro de conexão com o servidor. Verifique sua conexão e tente novamente.");
     } finally {
       setLoadingAi(false);
     }
@@ -372,7 +385,7 @@ export default function App() {
             </p>
           </section>
 
-          {/* CAIXA DA IA CONFIGURADA */}
+          {/* CONSULTORIA IA POSICIONADA NO LUGAR CORRETO */}
           <section className="app-glass-section ai-section">
             <div className="section-title-row">
               <h3>
@@ -445,6 +458,7 @@ export default function App() {
               {filteredTransactions.reverse().map((t) => (
                 <div key={t.id} className="app-history-row">
                   <div className="history-info-group">
+                    return (
                     <strong>{t.name}</strong>
                     <div className="history-spacer"></div>
                     <span
