@@ -77,6 +77,12 @@ export default function App() {
   const [name, setName] = useState("");
   const [value, setValue] = useState("");
   const [type, setType] = useState("income");
+  
+  // Estado para controlar a data selecionada no input do formulário
+  const [transactionDate, setTransactionDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -85,6 +91,7 @@ export default function App() {
     new Date().getMonth(),
   );
 
+  // Estados da IA
   const [aiInsights, setAiInsights] = useState<string>("");
   const [loadingAi, setLoadingAi] = useState<boolean>(false);
 
@@ -133,6 +140,10 @@ export default function App() {
 
   const addTransaction = async () => {
     if (!name.trim() || !value || !session?.user?.id) return;
+    
+    // Converte a data do input para o formato timestamp aceito pelo Supabase
+    const targetDate = new Date(transactionDate + "T12:00:00").toISOString();
+
     const { data, error } = await supabase
       .from("transactions")
       .insert([
@@ -141,13 +152,16 @@ export default function App() {
           value: parseFloat(value),
           type,
           user_id: session.user.id,
+          created_at: targetDate, // Envia a data escolhida para o banco
         },
       ])
       .select();
+
     if (!error && data) {
       setTransactions([...transactions, data[0]]);
       setName("");
       setValue("");
+      setTransactionDate(new Date().toISOString().split("T")[0]); // Reseta para hoje
     }
   };
 
@@ -156,9 +170,13 @@ export default function App() {
     if (!error) setTransactions(transactions.filter((t) => t.id !== id));
   };
 
-  const filteredTransactions = transactions.filter(
-    (t) => new Date(t.created_at).getMonth() === selectedMonth,
-  );
+  // Filtra as transações com base no mês selecionado
+  const filteredTransactions = transactions.filter((t) => {
+    // Garante a leitura correta do mês tratando o fuso horário
+    const dateObj = new Date(t.created_at);
+    return dateObj.getMonth() === selectedMonth;
+  });
+
   const income = filteredTransactions
     .filter((t) => t.type === "income")
     .reduce((a, b) => a + (b.value || 0), 0);
@@ -198,8 +216,9 @@ export default function App() {
     }
 
     const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+    
     if (!geminiKey) {
-      setAiInsights("Erro: Chave de API (VITE_GEMINI_API_KEY) não encontrada.");
+      setAiInsights("Erro de Ambiente: A chave VITE_GEMINI_API_KEY não foi encontrada.");
       return;
     }
 
@@ -220,7 +239,6 @@ export default function App() {
         Em seguida, monte uma tabela em formato Markdown com os 3 maiores gastos encontrados.
       `;
 
-      // FIX 1: endpoint v1beta + modelo gemini-2.0-flash (gemini-1.5-flash foi descontinuado na v1)
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
         {
@@ -425,6 +443,14 @@ export default function App() {
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
               />
+              
+              {/* NOVO CAMPO: Seletor de Data para o Lançamento cair no mês certo */}
+              <input
+                type="date"
+                value={transactionDate}
+                onChange={(e) => setTransactionDate(e.target.value)}
+              />
+
               <select value={type} onChange={(e) => setType(e.target.value)}>
                 <option value="income">Entrada</option>
                 <option value="expense">Saída</option>
@@ -451,7 +477,6 @@ export default function App() {
               </select>
             </div>
             <div className="app-history-container">
-              {/* FIX 2: removido o "return (" solto que estava sendo renderizado como texto */}
               {filteredTransactions.reverse().map((t) => (
                 <div key={t.id} className="app-history-row">
                   <div className="history-info-group">
