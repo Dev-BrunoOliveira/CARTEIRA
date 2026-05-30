@@ -10,6 +10,10 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
 } from "recharts";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
@@ -70,6 +74,9 @@ const ESSENCIAIS = [
   "VT + ALIMENTAÇÃO",
 ];
 
+// Cores do gráfico de pizza (Verde para Essencial, Vermelho para Supérfluo)
+const COLORS = ["#04522b", "#f43f5e"];
+
 export default function App() {
   const [session, setSession] = useState<any>(null);
   const [loadingInitial, setLoadingInitial] = useState(true);
@@ -77,10 +84,9 @@ export default function App() {
   const [name, setName] = useState("");
   const [value, setValue] = useState("");
   const [type, setType] = useState("income");
-  
-  // Estado para controlar a data selecionada no input do formulário
+
   const [transactionDate, setTransactionDate] = useState(
-    new Date().toISOString().split("T")[0]
+    new Date().toISOString().split("T")[0],
   );
 
   const [isSignUp, setIsSignUp] = useState(false);
@@ -91,7 +97,6 @@ export default function App() {
     new Date().getMonth(),
   );
 
-  // Estados da IA
   const [aiInsights, setAiInsights] = useState<string>("");
   const [loadingAi, setLoadingAi] = useState<boolean>(false);
 
@@ -140,8 +145,7 @@ export default function App() {
 
   const addTransaction = async () => {
     if (!name.trim() || !value || !session?.user?.id) return;
-    
-    // Converte a data do input para o formato timestamp aceito pelo Supabase
+
     const targetDate = new Date(transactionDate + "T12:00:00").toISOString();
 
     const { data, error } = await supabase
@@ -152,7 +156,7 @@ export default function App() {
           value: parseFloat(value),
           type,
           user_id: session.user.id,
-          created_at: targetDate, // Envia a data escolhida para o banco
+          created_at: targetDate,
         },
       ])
       .select();
@@ -161,7 +165,7 @@ export default function App() {
       setTransactions([...transactions, data[0]]);
       setName("");
       setValue("");
-      setTransactionDate(new Date().toISOString().split("T")[0]); // Reseta para hoje
+      setTransactionDate(new Date().toISOString().split("T")[0]);
     }
   };
 
@@ -170,9 +174,7 @@ export default function App() {
     if (!error) setTransactions(transactions.filter((t) => t.id !== id));
   };
 
-  // Filtra as transações com base no mês selecionado
   const filteredTransactions = transactions.filter((t) => {
-    // Garante a leitura correta do mês tratando o fuso horário
     const dateObj = new Date(t.created_at);
     return dateObj.getMonth() === selectedMonth;
   });
@@ -209,6 +211,52 @@ export default function App() {
     return Object.values(chartMap);
   };
 
+  // LOGICA DO GRAFICO DE PIZZA: Separa e calcula as porcentagens de gastos do mês selecionado
+  const getPieData = () => {
+    const totalGastos = expense;
+    if (totalGastos === 0) return [];
+
+    const essenciaisSum = filteredTransactions
+      .filter((t) => t.type === "expense" && ESSENCIAIS.includes(t.name))
+      .reduce((a, b) => a + (b.value || 0), 0);
+
+    const superfluosSum = totalGastos - essenciaisSum;
+
+    return [
+      { name: "Essenciais", value: parseFloat(essenciaisSum.toFixed(2)) },
+      { name: "Supérfluos", value: parseFloat(superfluosSum.toFixed(2)) },
+    ];
+  };
+
+  // Renderizador das labels de porcentagem direto na fatia da pizza
+  const renderCustomizedLabel = ({
+    cx,
+    cy,
+    midAngle,
+    innerRadius,
+    outerRadius,
+    percent,
+  }: any) => {
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const RADIAN = Math.PI / 180;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    return percent > 0 ? (
+      <text
+        x={x}
+        y={y}
+        fill="white"
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontSize={12}
+        fontWeight="bold"
+      >
+        {`${(percent * 100).toFixed(0)}%`}
+      </text>
+    ) : null;
+  };
+
   const generateAiAnalysis = async () => {
     if (filteredTransactions.length === 0) {
       alert("Nenhuma transação encontrada neste mês para analisar.");
@@ -216,9 +264,10 @@ export default function App() {
     }
 
     const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
-    
     if (!geminiKey) {
-      setAiInsights("Erro de Ambiente: A chave VITE_GEMINI_API_KEY não foi encontrada.");
+      setAiInsights(
+        "Erro de Ambiente: A chave VITE_GEMINI_API_KEY não foi encontrada.",
+      );
       return;
     }
 
@@ -257,22 +306,29 @@ export default function App() {
               },
             ],
           }),
-        }
+        },
       );
 
       const resData = await response.json();
 
-      if (resData.candidates && resData.candidates[0]?.content?.parts?.[0]?.text) {
+      if (
+        resData.candidates &&
+        resData.candidates[0]?.content?.parts?.[0]?.text
+      ) {
         setAiInsights(resData.candidates[0].content.parts[0].text);
       } else if (resData.error) {
         setAiInsights(`Erro retornado pelo Google: ${resData.error.message}`);
       } else {
-        setAiInsights("Nota: Erro de parse na resposta. Verifique o console da aplicação.");
+        setAiInsights(
+          "Nota: Erro de parse na resposta. Verifique o console da aplicação.",
+        );
         console.log("Resposta bruta do Google:", resData);
       }
     } catch (error: any) {
       console.error("Erro na requisição HTTP da IA:", error);
-      setAiInsights("Erro de conexão com o servidor. Verifique sua conexão e tente novamente.");
+      setAiInsights(
+        "Erro de conexão com o servidor. Verifique sua conexão e tente novamente.",
+      );
     } finally {
       setLoadingAi(false);
     }
@@ -443,8 +499,7 @@ export default function App() {
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
               />
-              
-              {/* NOVO CAMPO: Seletor de Data para o Lançamento cair no mês certo */}
+
               <input
                 type="date"
                 value={transactionDate}
@@ -519,6 +574,38 @@ export default function App() {
                   <Bar dataKey="Gastos" fill="#f43f5e" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
+            </div>
+          </section>
+
+          <section className="app-glass-section chart-section">
+            <h3>Distribuição de Gastos (Mês)</h3>
+            <div style={{ width: "100%", height: 240 }}>
+              {getPieData().length > 0 ? (
+                <ResponsiveContainer>
+                  <PieChart>
+                    <Pie
+                      data={getPieData()}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={renderCustomizedLabel}
+                      outerRadius={75}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {getPieData().map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value: any) => `R$ ${value.toLocaleString()}`} />
+                    <Legend iconType="circle" wrapperStyle={{ fontSize: "12px", marginTop: "5px" }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#94a3b8", fontSize: "14px" }}>
+                  Nenhum gasto registrado neste mês.
+                </div>
+              )}
             </div>
           </section>
         </aside>

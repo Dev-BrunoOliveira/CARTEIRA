@@ -411,6 +411,25 @@ body {
   margin-bottom: 20px;
 }
 
+
+.app-col-side .chart-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.recharts-legend-wrapper {
+  position: relative !important;
+  bottom: 0 !important;
+  margin-top: 10px !important;
+}
+
+
+@media (max-width: 768px) {
+  .app-col-side .chart-section {
+    margin-bottom: 20px;
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
