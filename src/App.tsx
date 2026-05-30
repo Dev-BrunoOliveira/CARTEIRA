@@ -44,6 +44,9 @@ const ESSENCIAIS = [
   "Faculdade",
   "Aluguel",
   "Luz",
+  "Agua",
+  "Internet",
+  "Gas",
   "FAM",
   "TIM",
   "Carregador",
@@ -95,8 +98,6 @@ export default function App() {
 
   const [aiInsights, setAiInsights] = useState<string>("");
   const [loadingAi, setLoadingAi] = useState<boolean>(false);
-
-  // Estado de controle de privacidade (Alternador global de exibição dos nomes dos gastos)
   const [showPrivateNames, setShowPrivateNames] = useState<boolean>(false);
 
   useEffect(() => {
@@ -210,22 +211,21 @@ export default function App() {
     return Object.values(chartMap);
   };
 
-  // Mapeia e ordena os gastos não essenciais dinamicamente (Maior -> Menor)
   const getPieData = () => {
     if (nonEssentialExpenses.length === 0) return [];
 
     const groupedWastes: { [key: string]: number } = {};
     
     nonEssentialExpenses.forEach((t) => {
-      const name = t.name;
-      groupedWastes[name] = (groupedWastes[name] || 0) + (t.value || 0);
+      const gName = t.name;
+      groupedWastes[gName] = (groupedWastes[gName] || 0) + (t.value || 0);
     });
 
     return Object.keys(groupedWastes)
-      .map((name, index) => ({
+      .map((gName, index) => ({
         id: `gasto-${index}`,
-        name: name,
-        value: parseFloat(groupedWastes[name].toFixed(2)),
+        name: gName,
+        value: parseFloat(groupedWastes[gName].toFixed(2)),
       }))
       .sort((a, b) => b.value - a.value);
   };
@@ -552,14 +552,12 @@ export default function App() {
             </div>
           </section>
 
-          {/* SEÇÃO DA PIZZA REVISADA COM FUNÇÃO DE PRIVACIDADE E LISTA DE ALTERNANTES DOS GASTOS */}
           <section className="app-glass-section chart-section">
             <div className="section-title-row" style={{ marginBottom: "10px" }}>
               <h3>Maiores Supérfluos</h3>
               <button 
                 className="btn-privacy-toggle"
                 onClick={() => setShowPrivateNames(!showPrivateNames)}
-                title={showPrivateNames ? "Ocultar nomes reais" : "Mostrar nomes reais"}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -614,7 +612,6 @@ export default function App() {
               )}
             </div>
 
-            {/* LISTA DE ALTERNANTES CONFIGURADA PARA PROTEGER PRIVACIDADE (MAIOR PARA O MENOR) */}
             {pieData.length > 0 && (
               <div className="custom-alternating-legend">
                 {pieData.map((item, index) => (
