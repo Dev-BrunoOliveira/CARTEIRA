@@ -95,6 +95,7 @@ const ESSENCIAIS = [
   "Água",
   "Gás",
   "Farmacia",
+  "Compras",
   "Droga Raia",
   "Drogasil",
   "Plano de Saude",

@@ -30,7 +30,7 @@ body {
   flex: 1.2;
   background:
     linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.5)),
-    url("https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=1471");
+    url(./assets/finança.jpg);
   background-size: cover;
   background-position: center;
   display: flex;
