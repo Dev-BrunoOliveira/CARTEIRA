@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import { createClient } from "@supabase/supabase-js";
-import { Wallet, Trash2, LogOut, Plus, BrainCircuit, Eye, EyeOff } from "lucide-react";
+import {
+  Wallet,
+  Trash2,
+  LogOut,
+  Plus,
+  BrainCircuit,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -34,6 +42,7 @@ const months = [
   "Dez",
 ];
 
+// LISTA EXPANDIDA PARA TESTES COM GASTOS COMUNS DO DIA A DIA
 const ESSENCIAIS = [
   "Salario",
   "Taxa Cartorial",
@@ -45,6 +54,7 @@ const ESSENCIAIS = [
   "Financiamento Casa",
   "Financiamento Estudo",
   "Financiamento Pessoal",
+  "Financiamento",
   "Condominio",
   "Faculdade",
   "Aluguel",
@@ -80,6 +90,32 @@ const ESSENCIAIS = [
   "Condução",
   "Bomboniere",
   "VT + ALIMENTAÇÃO",
+  // --- Adicionados para testes comuns ---
+  "Uber",
+  "99Taxis",
+  "99",
+  "Combustivel",
+  "Gasolina",
+  "Etanol",
+  "Condomínio",
+  "Água",
+  "Gás",
+  "Farmacia",
+  "Droga Raia",
+  "Drogasil",
+  "Plano de Saude",
+  "Convenio",
+  "Dentista",
+  "Almoço",
+  "Jantar",
+  "Padaria",
+  "iFood",
+  "Pedagio",
+  "Seguro",
+  "IPVA",
+  "IPTU",
+  "Higiene",
+  "Limpeza",
 ];
 
 export default function App() {
@@ -193,17 +229,20 @@ export default function App() {
     .reduce((a, b) => a + (b.value || 0), 0);
   const balance = income - expense;
 
-  const nonEssentialExpenses = filteredTransactions.filter(
+  const savingsRate = income > 0 ? (balance / income) * 100 : 0;
+
+  const trueNonEssential = filteredTransactions.filter(
     (t) => t.type === "expense" && !ESSENCIAIS.includes(t.name),
   );
-  const totalNonEssential = nonEssentialExpenses.reduce(
+
+  const totalNonEssential = trueNonEssential.reduce(
     (a, b) => a + (b.value || 0),
     0,
   );
 
   const biggestWaste =
-    nonEssentialExpenses.length > 0
-      ? nonEssentialExpenses.sort((a, b) => b.value - a.value)[0]
+    trueNonEssential.length > 0
+      ? [...trueNonEssential].sort((a, b) => b.value - a.value)[0]
       : null;
 
   const getMonthlyData = () => {
@@ -211,6 +250,12 @@ export default function App() {
     months.forEach((m) => (chartMap[m] = { name: m, Ganhos: 0, Gastos: 0 }));
     transactions.forEach((t) => {
       const mName = months[new Date(t.created_at).getMonth()];
+      if (t.type === "income") chartMap[mName].GHydros += t.value || 0;
+      chartMap[mName] = chartMap[mName] || {
+        name: mName,
+        Ganhos: 0,
+        Gastos: 0,
+      };
       if (t.type === "income") chartMap[mName].Ganhos += t.value || 0;
       else chartMap[mName].Gastos += t.value || 0;
     });
@@ -218,11 +263,11 @@ export default function App() {
   };
 
   const getPieData = () => {
-    if (nonEssentialExpenses.length === 0) return [];
+    if (trueNonEssential.length === 0) return [];
 
     const groupedWastes: { [key: string]: number } = {};
-    
-    nonEssentialExpenses.forEach((t) => {
+
+    trueNonEssential.forEach((t) => {
       const gName = t.name;
       groupedWastes[gName] = (groupedWastes[gName] || 0) + (t.value || 0);
     });
@@ -238,14 +283,22 @@ export default function App() {
 
   const getDynamicColor = (index: number, total: number) => {
     const baseColors = [
-      "#f43f5e", "#ec4899", "#d946ef", "#8b5cf6", 
-      "#f97316", "#eab308", "#ef4444", "#a855f7"
+      "#f43f5e",
+      "#ec4899",
+      "#d946ef",
+      "#8b5cf6",
+      "#f97316",
+      "#eab308",
+      "#ef4444",
+      "#a855f7",
     ];
     if (index < baseColors.length) return baseColors[index];
-    
+
     const hue = (index * (360 / (total || 1))) % 360;
     return `hsl(${hue}, 70%, 55%)`;
   };
+
+  const pieData = getPieData();
 
   const renderCustomizedLabel = ({
     cx,
@@ -283,7 +336,9 @@ export default function App() {
 
     const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
     if (!geminiKey) {
-      setAiInsights("Erro de Ambiente: A chave VITE_GEMINI_API_KEY não foi encontrada.");
+      setAiInsights(
+        "Erro de Ambiente: A chave VITE_GEMINI_API_KEY não foi encontrada.",
+      );
       return;
     }
 
@@ -317,15 +372,22 @@ export default function App() {
 
       const resData = await response.json();
 
-      if (resData.candidates && resData.candidates[0]?.content?.parts?.[0]?.text) {
+      if (
+        resData.candidates &&
+        resData.candidates[0]?.content?.parts?.[0]?.text
+      ) {
         setAiInsights(resData.candidates[0].content.parts[0].text);
       } else if (resData.error) {
         setAiInsights(`Erro retornado pelo Google: ${resData.error.message}`);
       } else {
-        setAiInsights("Nota: Erro de parse na resposta. Verifique o console da aplicação.");
+        setAiInsights(
+          "Nota: Erro de parse na resposta. Verifique o console da aplicação.",
+        );
       }
     } catch (error: any) {
-      setAiInsights("Erro de conexão com o servidor. Verifique sua conexão e tente novamente.");
+      setAiInsights(
+        "Erro de conexão com o servidor. Verifique sua conexão e tente novamente.",
+      );
     } finally {
       setLoadingAi(false);
     }
@@ -383,7 +445,9 @@ export default function App() {
             </div>
             <button
               className="auth-btn-google"
-              onClick={() => supabase.auth.signInWithOAuth({ provider: "google" })}
+              onClick={() =>
+                supabase.auth.signInWithOAuth({ provider: "google" })
+              }
             >
               <img
                 src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
@@ -400,8 +464,6 @@ export default function App() {
     );
   }
 
-  const pieData = getPieData();
-
   return (
     <div className="app-main-layout">
       <header className="app-top-nav">
@@ -416,7 +478,7 @@ export default function App() {
         </button>
       </header>
 
-      <div className="app-summary-grid">
+      <div className="app-summary-grid custom-four-cards">
         <div className="app-stat-card income-card">
           <div>
             <small>Ganhos</small>
@@ -433,6 +495,26 @@ export default function App() {
           <div>
             <small>Saldo Disponível</small>
             <strong>R$ {balance.toLocaleString()}</strong>
+          </div>
+        </div>
+        <div
+          className="app-stat-card savings-card"
+          style={{ borderLeftColor: "#8b5cf6" }}
+        >
+          <div>
+            <small>Taxa de Economia</small>
+            <strong
+              style={{
+                color:
+                  savingsRate >= 20
+                    ? "#10b981"
+                    : savingsRate > 0
+                      ? "#f97316"
+                      : "#f43f5e",
+              }}
+            >
+              {savingsRate.toFixed(1)}%
+            </strong>
           </div>
         </div>
       </div>
@@ -468,7 +550,14 @@ export default function App() {
             </div>
             {aiInsights && (
               <div className="ai-response-container">
-                <div style={{ whiteSpace: "pre-line", fontSize: "14px", marginTop: "15px", color: "#475569" }}>
+                <div
+                  style={{
+                    whiteSpace: "pre-line",
+                    fontSize: "14px",
+                    marginTop: "15px",
+                    color: "#475569",
+                  }}
+                >
                   {aiInsights}
                 </div>
               </div>
@@ -525,7 +614,9 @@ export default function App() {
                   <div className="history-info-group">
                     <strong>{t.name}</strong>
                     <div className="history-spacer"></div>
-                    <span className={t.type === "income" ? "val-plus" : "val-minus"}>
+                    <span
+                      className={t.type === "income" ? "val-plus" : "val-minus"}
+                    >
                       R$ {t.value.toFixed(2)}
                     </span>
                     <button
@@ -548,7 +639,12 @@ export default function App() {
               <ResponsiveContainer>
                 <BarChart data={getMonthlyData()}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
+                  <XAxis
+                    dataKey="name"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
                   <YAxis fontSize={12} tickLine={false} axisLine={false} />
                   <Tooltip cursor={{ fill: "rgba(0,0,0,0.05)" }} />
                   <Bar dataKey="Ganhos" fill="#10b981" radius={[4, 4, 0, 0]} />
@@ -561,7 +657,7 @@ export default function App() {
           <section className="app-glass-section chart-section">
             <div className="section-title-row" style={{ marginBottom: "10px" }}>
               <h3>Maiores Supérfluos</h3>
-              <button 
+              <button
                 className="btn-privacy-toggle"
                 onClick={() => setShowPrivateNames(!showPrivateNames)}
                 style={{
@@ -575,14 +671,14 @@ export default function App() {
                   padding: "5px 10px",
                   borderRadius: "20px",
                   cursor: "pointer",
-                  fontWeight: "500"
+                  fontWeight: "500",
                 }}
               >
                 {showPrivateNames ? <EyeOff size={14} /> : <Eye size={14} />}
                 {showPrivateNames ? "Mascarar" : "Revelar"}
               </button>
             </div>
-            
+
             <div style={{ width: "100%", height: 180 }}>
               {pieData.length > 0 ? (
                 <ResponsiveContainer>
@@ -597,22 +693,31 @@ export default function App() {
                       dataKey="value"
                     >
                       {pieData.map((_, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={getDynamicColor(index, pieData.length)} 
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={getDynamicColor(index, pieData.length)}
                         />
                       ))}
                     </Pie>
-                    <Tooltip 
+                    <Tooltip
                       formatter={(value: any, name: any) => [
-                        `R$ ${value.toLocaleString()}`, 
-                        showPrivateNames ? name : "Gasto Oculto"
-                      ]} 
+                        `R$ ${value.toLocaleString()}`,
+                        showPrivateNames ? name : "Gasto Oculto",
+                      ]}
                     />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#94a3b8", fontSize: "14px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: "100%",
+                    color: "#94a3b8",
+                    fontSize: "14px",
+                  }}
+                >
                   Nenhum gasto supérfluo registrado.
                 </div>
               )}
@@ -622,9 +727,11 @@ export default function App() {
               <div className="custom-alternating-legend">
                 {pieData.map((item, index) => (
                   <div key={item.id} className="legend-alternant-item">
-                    <span 
-                      className="legend-color-badge" 
-                      style={{ backgroundColor: getDynamicColor(index, pieData.length) }}
+                    <span
+                      className="legend-color-badge"
+                      style={{
+                        backgroundColor: getDynamicColor(index, pieData.length),
+                      }}
                     />
                     <div className="legend-text-group">
                       <span className="legend-item-name">

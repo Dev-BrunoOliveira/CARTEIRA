@@ -638,3 +638,56 @@ body {
   background: #cbd5e1;
   border-radius: 10px;
 }
+.custom-alternating-legend {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 180px;
+  overflow-y: auto;
+  padding-right: 5px;
+  width: 100%;
+}
+
+.legend-alternant-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f8fafc;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.legend-color-badge {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.legend-text-group {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 13px;
+}
+
+.legend-item-name {
+  font-weight: 500;
+  color: #334155;
+}
+
+.legend-item-value {
+  font-weight: 600;
+  color: #475569;
+}
+
+.custom-alternating-legend::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-alternating-legend::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
