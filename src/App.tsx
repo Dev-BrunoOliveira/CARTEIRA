@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "./supabaseClient";
 import {
   Wallet,
   Trash2,
@@ -22,10 +22,6 @@ import {
   Pie,
   Cell,
 } from "recharts";
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const months = [
   "Jan",
@@ -158,9 +154,11 @@ export default function App() {
   }, [session]);
 
   const fetchTransactions = async () => {
+    if (!session?.user?.id) return;
     const { data, error } = await supabase
       .from("transactions")
       .select("*")
+      .eq("user_id", session.user.id)
       .order("created_at", { ascending: true });
     if (!error && data) setTransactions(data);
   };
@@ -185,6 +183,10 @@ export default function App() {
 
   const addTransaction = async () => {
     if (!name.trim() || !value || !session?.user?.id) return;
+    if (name.trim().length > 100) return;
+
+    const numVal = parseFloat(value);
+    if (isNaN(numVal) || numVal <= 0 || numVal > 10_000_000) return;
 
     const targetDate = new Date(transactionDate + "T12:00:00").toISOString();
 
@@ -193,7 +195,7 @@ export default function App() {
       .insert([
         {
           name: name.trim(),
-          value: parseFloat(value),
+          value: numVal,
           type,
           user_id: session.user.id,
           created_at: targetDate,
