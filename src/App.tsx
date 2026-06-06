@@ -42,7 +42,6 @@ const months = [
   "Dez",
 ];
 
-// LISTA EXPANDIDA PARA TESTES COM GASTOS COMUNS DO DIA A DIA
 const ESSENCIAIS = [
   "Salario",
   "Taxa Cartorial",
@@ -90,7 +89,6 @@ const ESSENCIAIS = [
   "Condução",
   "Bomboniere",
   "VT + ALIMENTAÇÃO",
-  // --- Adicionados para testes comuns ---
   "Uber",
   "99Taxis",
   "99",
@@ -250,7 +248,6 @@ export default function App() {
     months.forEach((m) => (chartMap[m] = { name: m, Ganhos: 0, Gastos: 0 }));
     transactions.forEach((t) => {
       const mName = months[new Date(t.created_at).getMonth()];
-      if (t.type === "income") chartMap[mName].GHydros += t.value || 0;
       chartMap[mName] = chartMap[mName] || {
         name: mName,
         Ganhos: 0,
