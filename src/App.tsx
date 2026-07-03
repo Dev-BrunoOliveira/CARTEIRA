@@ -186,7 +186,7 @@ export default function App() {
     if (!name.trim() || !value || !session?.user?.id) return;
     if (name.trim().length > 100) return;
 
-    const numVal = parseFloat(value);
+    const numVal = parseFloat(value.replace(/\./g, "").replace(",", "."));
     if (isNaN(numVal) || numVal <= 0 || numVal > 10_000_000) return;
 
     const targetDate = new Date(transactionDate + "T12:00:00").toISOString();
@@ -573,10 +573,21 @@ export default function App() {
                 onChange={(e) => setName(e.target.value)}
               />
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 placeholder="Valor"
                 value={value}
-                onChange={(e) => setValue(e.target.value)}
+                onChange={(e) => {
+                  let v = e.target.value.replace(/\D/g, "");
+                  if (!v) {
+                    setValue("");
+                    return;
+                  }
+                  v = (parseInt(v, 10) / 100).toFixed(2);
+                  v = v.replace(".", ",");
+                  v = v.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+                  setValue(v);
+                }}
               />
               <input
                 type="date"
