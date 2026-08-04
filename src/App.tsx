@@ -1,122 +1,25 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import "./App.css";
+import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./supabaseClient";
-import {
-  Wallet,
-  Trash2,
-  LogOut,
-  Plus,
-  BrainCircuit,
-  Eye,
-  EyeOff,
-} from "lucide-react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
+import { months, ESSENCIAIS } from "./constants/finance";
+import type { PieLabelRenderProps } from "recharts";
+import type { Transaction, MonthlyChartData } from "./types/finance";
 
-const months = [
-  "Jan",
-  "Fev",
-  "Mar",
-  "Abr",
-  "Mai",
-  "Jun",
-  "Jul",
-  "Ago",
-  "Set",
-  "Out",
-  "Nov",
-  "Dez",
-];
-
-const ESSENCIAIS = [
-  "Salario",
-  "Taxa Cartorial",
-  "Feira Domingo",
-  "Açougue",
-  "Feira",
-  "Financiamento Carro",
-  "Financiamento Moto",
-  "Financiamento Casa",
-  "Financiamento Estudo",
-  "Financiamento Pessoal",
-  "Financiamento",
-  "Condominio",
-  "Faculdade",
-  "Aluguel",
-  "Luz",
-  "Agua",
-  "Internet",
-  "Gas",
-  "FAM",
-  "TIM",
-  "Carregador",
-  "Mercado",
-  "Enel",
-  "ENEL",
-  "Claro",
-  "CLARO",
-  "VIVO",
-  "Vivo",
-  "Tim",
-  "Claro",
-  "Academia",
-  "Vale Transporte",
-  "VT",
-  "Netflix",
-  "Spotify",
-  "Disney+",
-  "Prime Video",
-  "HBO Max",
-  "Clouddy",
-  "CLOUDDY",
-  "Apple",
-  "Cartão da Larissa",
-  "Nubank",
-  "Condução",
-  "Bilhete Unico",
-  "VT + ALIMENTAÇÃO",
-  "Uber",
-  "99Taxis",
-  "99",
-  "Combustivel",
-  "Gasolina",
-  "Etanol",
-  "Condomínio",
-  "Água",
-  "Gás",
-  "Farmacia",
-  "Compras",
-  "Droga Raia",
-  "Drogasil",
-  "Plano de Saude",
-  "Convenio",
-  "Dentista",
-  "Almoço",
-  "Jantar",
-  "Padaria",
-  "iFood",
-  "Pedagio",
-  "Seguro",
-  "IPVA",
-  "IPTU",
-  "Higiene",
-  "Limpeza",
-];
+import { AuthScreen } from "./components/AuthScreen";
+import { Header } from "./components/Header";
+import { SummaryCards } from "./components/SummaryCards";
+import { WasteAnalysis } from "./components/WasteAnalysis";
+import { AiConsulting } from "./components/AiConsulting";
+import { TransactionForm } from "./components/TransactionForm";
+import { TransactionHistory } from "./components/TransactionHistory";
+import { MonthlyChart } from "./components/MonthlyChart";
+import { SuperfluousChart } from "./components/SuperfluousChart";
 
 export default function App() {
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loadingInitial, setLoadingInitial] = useState(true);
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [name, setName] = useState("");
   const [value, setValue] = useState("");
   const [type, setType] = useState("income");
@@ -150,11 +53,7 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  useEffect(() => {
-    if (session) fetchTransactions();
-  }, [session]);
-
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     if (!session?.user?.id) return;
     const { data, error } = await supabase
       .from("transactions")
@@ -162,7 +61,11 @@ export default function App() {
       .eq("user_id", session.user.id)
       .order("created_at", { ascending: true });
     if (!error && data) setTransactions(data);
-  };
+  }, [session]);
+
+  useEffect(() => {
+    if (session) fetchTransactions();
+  }, [session, fetchTransactions]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -177,8 +80,9 @@ export default function App() {
       } else {
         await supabase.auth.signInWithPassword({ email, password });
       }
-    } catch (error: any) {
-      alert(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) alert(error.message);
+      else alert(String(error));
     }
   };
 
@@ -212,7 +116,7 @@ export default function App() {
     }
   };
 
-  const deleteTransaction = async (id: any) => {
+  const deleteTransaction = async (id: string | number) => {
     const { error } = await supabase.from("transactions").delete().eq("id", id);
     if (!error) setTransactions(transactions.filter((t) => t.id !== id));
   };
@@ -246,8 +150,8 @@ export default function App() {
       ? [...trueNonEssential].sort((a, b) => b.value - a.value)[0]
       : null;
 
-  const getMonthlyData = () => {
-    const chartMap: any = {};
+  const getMonthlyData = (): MonthlyChartData[] => {
+    const chartMap: Record<string, MonthlyChartData> = {};
     months.forEach((m) => (chartMap[m] = { name: m, Ganhos: 0, Gastos: 0 }));
     transactions.forEach((t) => {
       const mName = months[new Date(t.created_at).getMonth()];
@@ -301,19 +205,19 @@ export default function App() {
   const pieData = getPieData();
 
   const renderCustomizedLabel = ({
-    cx,
-    cy,
-    midAngle,
-    innerRadius,
-    outerRadius,
-    percent,
-  }: any) => {
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    cx = 0,
+    cy = 0,
+    midAngle = 0,
+    innerRadius = 0,
+    outerRadius = 0,
+    percent = 0,
+  }: PieLabelRenderProps) => {
+    const radius = Number(innerRadius) + (Number(outerRadius) - Number(innerRadius)) * 0.5;
     const RADIAN = Math.PI / 180;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+    const x = Number(cx) + radius * Math.cos(-Number(midAngle) * RADIAN);
+    const y = Number(cy) + radius * Math.sin(-Number(midAngle) * RADIAN);
 
-    return percent > 0.04 ? (
+    return Number(percent) > 0.04 ? (
       <text
         x={x}
         y={y}
@@ -323,7 +227,7 @@ export default function App() {
         fontSize={11}
         fontWeight="bold"
       >
-        {`${(percent * 100).toFixed(0)}%`}
+        {`${(Number(percent) * 100).toFixed(0)}%`}
       </text>
     ) : null;
   };
@@ -384,7 +288,7 @@ export default function App() {
           "Nota: Erro de parse na resposta. Verifique o console da aplicação.",
         );
       }
-    } catch (error: any) {
+    } catch {
       setAiInsights(
         "Erro de conexão com o servidor. Verifique sua conexão e tente novamente.",
       );
@@ -398,365 +302,75 @@ export default function App() {
 
   if (!session) {
     return (
-      <div className="auth-fullscreen">
-        <div className="auth-side-banner">
-          <div className="auth-overlay-info">
-            <h1>Domine suas finanças.</h1>
-            <p>Organização inteligente para seu dinheiro.</p>
-          </div>
-        </div>
-        <div className="auth-side-form">
-          <div className="auth-card-box">
-            <div className="auth-logo">
-              <Wallet size={42} /> <span>Gestão Financeira</span>
-            </div>
-            <form onSubmit={handleAuth} className="auth-main-form">
-              {isSignUp && (
-                <div className="auth-input">
-                  <span>Nome</span>
-                  <input
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                  />
-                </div>
-              )}
-              <div className="auth-input">
-                <span>E-mail</span>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-              <div className="auth-input">
-                <span>Senha</span>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-              <button className="auth-btn-submit" type="submit">
-                {isSignUp ? "Cadastrar" : "Entrar"}
-              </button>
-            </form>
-            <div className="auth-divider">
-              <span>OU</span>
-            </div>
-            <button
-              className="auth-btn-google"
-              onClick={() =>
-                supabase.auth.signInWithOAuth({ provider: "google" })
-              }
-            >
-              <img
-                src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                alt="G"
-              />{" "}
-              Entrar com Google
-            </button>
-            <p className="auth-toggle" onClick={() => setIsSignUp(!isSignUp)}>
-              {isSignUp ? "Já tem conta? Entrar" : "Criar conta"}
-            </p>
-          </div>
-        </div>
-      </div>
+      <AuthScreen
+        isSignUp={isSignUp}
+        setIsSignUp={setIsSignUp}
+        fullName={fullName}
+        setFullName={setFullName}
+        email={email}
+        setEmail={setEmail}
+        password={password}
+        setPassword={setPassword}
+        handleAuth={handleAuth}
+      />
     );
   }
 
   return (
     <div className="app-main-layout">
-      <header className="app-top-nav">
-        <div className="app-logo-brand">
-          <Wallet /> Gestão Financeira{" "}
-        </div>
-        <button
-          onClick={() => supabase.auth.signOut()}
-          className="app-logout-icon"
-        >
-          <LogOut size={20} />
-        </button>
-      </header>
+      <Header />
 
-      <div className="app-summary-grid custom-four-cards">
-        <div className="app-stat-card income-card">
-          <div>
-            <small>Ganhos</small>
-            <strong>R$ {income.toLocaleString()}</strong>
-          </div>
-        </div>
-        <div className="app-stat-card expense-card">
-          <div>
-            <small>Gastos</small>
-            <strong>R$ {expense.toLocaleString()}</strong>
-          </div>
-        </div>
-        <div className="app-stat-card balance-card">
-          <div>
-            <small>Saldo Disponível</small>
-            <strong>R$ {balance.toLocaleString()}</strong>
-          </div>
-        </div>
-        <div
-          className="app-stat-card savings-card"
-          style={{ borderLeftColor: "#8b5cf6" }}
-        >
-          <div>
-            <small>Taxa de Economia</small>
-            <strong
-              style={{
-                color:
-                  savingsRate >= 20
-                    ? "#10b981"
-                    : savingsRate > 0
-                      ? "#f97316"
-                      : "#f43f5e",
-              }}
-            >
-              {savingsRate.toFixed(1)}%
-            </strong>
-          </div>
-        </div>
-      </div>
+      <SummaryCards
+        income={income}
+        expense={expense}
+        balance={balance}
+        savingsRate={savingsRate}
+      />
 
       <div className="app-content-columns">
         <div className="app-col-primary">
-          <section className="app-glass-section waste-alert">
-            <div className="section-title-row">
-              <h3>Análise de Gastos</h3>
-              <span className="waste-badge">
-                R$ {totalNonEssential.toLocaleString()} não essenciais
-              </span>
-            </div>
-            <p>
-              {biggestWaste
-                ? `⚠️ Seu maior gasto supérfluo é "${biggestWaste.name}" (R$ ${biggestWaste.value.toFixed(2)}).`
-                : "✅ Ótimo! Seus gastos estão focados no essencial."}
-            </p>
-          </section>
+          <WasteAnalysis
+            totalNonEssential={totalNonEssential}
+            biggestWaste={biggestWaste}
+          />
 
-          <section className="app-glass-section ai-section">
-            <div className="section-title-row">
-              <h3>
-                <BrainCircuit size={20} color="#8b5cf6" /> Consultoria IA
-              </h3>
-              <button
-                className="app-btn-ai"
-                onClick={generateAiAnalysis}
-                disabled={loadingAi}
-              >
-                {loadingAi ? "Analisando..." : "Analisar Mês"}
-              </button>
-            </div>
-            {aiInsights && (
-              <div className="ai-response-container">
-                <div
-                  style={{
-                    whiteSpace: "pre-line",
-                    fontSize: "14px",
-                    marginTop: "15px",
-                    color: "#475569",
-                  }}
-                >
-                  {aiInsights}
-                </div>
-              </div>
-            )}
-          </section>
+          <AiConsulting
+            generateAiAnalysis={generateAiAnalysis}
+            loadingAi={loadingAi}
+            aiInsights={aiInsights}
+          />
 
-          <section className="app-glass-section">
-            <h3>Novo Lançamento</h3>
-            <div className="app-quick-form">
-              <input
-                placeholder="Descrição"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-              <input
-                type="text"
-                inputMode="numeric"
-                placeholder="Valor"
-                value={value}
-                onChange={(e) => {
-                  let v = e.target.value.replace(/\D/g, "");
-                  if (!v) {
-                    setValue("");
-                    return;
-                  }
-                  v = (parseInt(v, 10) / 100).toFixed(2);
-                  v = v.replace(".", ",");
-                  v = v.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-                  setValue(v);
-                }}
-              />
-              <input
-                type="date"
-                value={transactionDate}
-                onChange={(e) => setTransactionDate(e.target.value)}
-              />
-              <select value={type} onChange={(e) => setType(e.target.value)}>
-                <option value="income">Entrada</option>
-                <option value="expense">Saída</option>
-              </select>
-              <button className="app-btn-add" onClick={addTransaction}>
-                <Plus size={18} />
-              </button>
-            </div>
-          </section>
+          <TransactionForm
+            name={name}
+            setName={setName}
+            value={value}
+            setValue={setValue}
+            transactionDate={transactionDate}
+            setTransactionDate={setTransactionDate}
+            type={type}
+            setType={setType}
+            addTransaction={addTransaction}
+          />
 
-          <section className="app-glass-section">
-            <div className="section-title-row">
-              <h3>Histórico</h3>
-              <select
-                className="app-month-filter"
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-              >
-                {months.map((m, i) => (
-                  <option key={m} value={i}>
-                    {m}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="app-history-container">
-              {[...filteredTransactions].reverse().map((t) => (
-                <div key={t.id} className="app-history-row">
-                  <div className="history-info-group">
-                    <strong>{t.name}</strong>
-                    <div className="history-spacer"></div>
-                    <span
-                      className={t.type === "income" ? "val-plus" : "val-minus"}
-                    >
-                      R$ {t.value.toFixed(2)}
-                    </span>
-                    <button
-                      className="btn-delete-row"
-                      onClick={() => deleteTransaction(t.id)}
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
+          <TransactionHistory
+            selectedMonth={selectedMonth}
+            setSelectedMonth={setSelectedMonth}
+            months={months}
+            filteredTransactions={filteredTransactions}
+            deleteTransaction={deleteTransaction}
+          />
         </div>
 
         <aside className="app-col-side">
-          <section className="app-glass-section chart-section">
-            <h3>Comparativo Mensal</h3>
-            <div style={{ width: "100%", height: 300 }}>
-              <ResponsiveContainer>
-                <BarChart data={getMonthlyData()}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis
-                    dataKey="name"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis fontSize={12} tickLine={false} axisLine={false} />
-                  <Tooltip cursor={{ fill: "rgba(0,0,0,0.05)" }} />
-                  <Bar dataKey="Ganhos" fill="#10b981" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="Gastos" fill="#f43f5e" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </section>
+          <MonthlyChart data={getMonthlyData()} />
 
-          <section className="app-glass-section chart-section">
-            <div className="section-title-row" style={{ marginBottom: "10px" }}>
-              <h3>Maiores Supérfluos</h3>
-              <button
-                className="btn-privacy-toggle"
-                onClick={() => setShowPrivateNames(!showPrivateNames)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "5px",
-                  fontSize: "12px",
-                  background: "rgba(139, 92, 246, 0.1)",
-                  color: "#8b5cf6",
-                  border: "none",
-                  padding: "5px 10px",
-                  borderRadius: "20px",
-                  cursor: "pointer",
-                  fontWeight: "500",
-                }}
-              >
-                {showPrivateNames ? <EyeOff size={14} /> : <Eye size={14} />}
-                {showPrivateNames ? "Mascarar" : "Revelar"}
-              </button>
-            </div>
-
-            <div style={{ width: "100%", height: 180 }}>
-              {pieData.length > 0 ? (
-                <ResponsiveContainer>
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={renderCustomizedLabel}
-                      outerRadius={75}
-                      dataKey="value"
-                    >
-                      {pieData.map((_, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={getDynamicColor(index, pieData.length)}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(value: any, name: any) => [
-                        `R$ ${value.toLocaleString()}`,
-                        showPrivateNames ? name : "Gasto Oculto",
-                      ]}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    height: "100%",
-                    color: "#94a3b8",
-                    fontSize: "14px",
-                  }}
-                >
-                  Nenhum gasto supérfluo registrado.
-                </div>
-              )}
-            </div>
-
-            {pieData.length > 0 && (
-              <div className="custom-alternating-legend">
-                {pieData.map((item, index) => (
-                  <div key={item.id} className="legend-alternant-item">
-                    <span
-                      className="legend-color-badge"
-                      style={{
-                        backgroundColor: getDynamicColor(index, pieData.length),
-                      }}
-                    />
-                    <div className="legend-text-group">
-                      <span className="legend-item-name">
-                        {showPrivateNames ? item.name : `Gasto #${index + 1}`}
-                      </span>
-                      <span className="legend-item-value">
-                        R$ {item.value.toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
+          <SuperfluousChart
+            pieData={pieData}
+            showPrivateNames={showPrivateNames}
+            setShowPrivateNames={setShowPrivateNames}
+            renderCustomizedLabel={renderCustomizedLabel}
+            getDynamicColor={getDynamicColor}
+          />
         </aside>
       </div>
     </div>
