@@ -83,7 +83,7 @@ const ESSENCIAIS = [
   "Cartão da Larissa",
   "Nubank",
   "Condução",
-  "Bomboniere",
+  "Bilhete Unico",
   "VT + ALIMENTAÇÃO",
   "Uber",
   "99Taxis",
