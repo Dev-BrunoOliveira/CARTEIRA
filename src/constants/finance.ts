@@ -25,6 +25,7 @@ export const ESSENCIAIS = [
   "Financiamento Estudo",
   "Financiamento Pessoal",
   "Financiamento",
+  "Convenio Medico",
   "Condominio",
   "Faculdade",
   "Aluguel",
